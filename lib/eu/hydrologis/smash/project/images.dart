@@ -15,6 +15,7 @@ import 'package:provider/provider.dart';
 import 'package:smash/eu/hydrologis/smash/models/project_state.dart';
 import 'package:smash/eu/hydrologis/smash/project/objects/images.dart';
 import 'package:smash/eu/hydrologis/smash/project/project_database.dart';
+import 'package:smash/generated/l10n.dart';
 import 'package:smashlibs/com/hydrologis/flutterlibs/utils/logging.dart';
 import 'package:smashlibs/smashlibs.dart';
 
@@ -31,6 +32,12 @@ class ImageWidgetUtilities {
   static int saveImageToSmashDb(
       BuildContext context, String path, DbImage dbImageToCompleteAndSave) {
     var imageBytes = ImageUtilities.bytesFromImageFile(path);
+    return saveImageBytesToSmashDb(
+        imageBytes, context, dbImageToCompleteAndSave, path);
+  }
+
+  static int saveImageBytesToSmashDb(List<int> imageBytes, BuildContext context,
+      DbImage dbImageToCompleteAndSave, String imageIdentifier4Error) {
     var thumbBytes = ImageUtilities.resizeImage(imageBytes, newWidth: 200);
 
     ProjectState projectState =
@@ -49,7 +56,8 @@ class ImageWidgetUtilities {
         int imgId = _db.insertMap(
             SqlName(TABLE_IMAGES), dbImageToCompleteAndSave.toMap());
         if (imgId == null) {
-          SMLogger().e("Could not save image to db: $path", null, null);
+          SMLogger().e(
+              "Could not save image to db: $imageIdentifier4Error", null, null);
         }
         return imgId;
       } on Exception catch (e) {
@@ -192,7 +200,10 @@ class SmashImageZoomWidget extends StatelessWidget {
           } else {
             // Otherwise, display a loading indicator.
             return Center(
-                child: SmashCircularProgress(label: "Loading image..."));
+                child: SmashCircularProgress(
+                    label: SL
+                        .of(context)
+                        .images_loadingImage)); //"Loading image..."
           }
         },
       ),

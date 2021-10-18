@@ -13,12 +13,11 @@ import 'package:dart_jts/dart_jts.dart' hide Position;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
-import 'package:flutter_map_dragmarker/dragmarker.dart';
-import 'package:flutter_map_line_editor/polyeditor.dart';
 import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
 import 'package:lat_lon_grid_plugin/lat_lon_grid_plugin.dart';
-import 'package:latlong/latlong.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:positioned_tap_detector_2/positioned_tap_detector_2.dart';
 import 'package:provider/provider.dart';
 import 'package:smash/eu/hydrologis/smash/forms/form_smash_utils.dart';
 import 'package:smash/eu/hydrologis/smash/gps/gps.dart';
@@ -50,6 +49,8 @@ import 'package:smash/eu/hydrologis/smash/widgets/note_list.dart';
 import 'package:smash/eu/hydrologis/smash/widgets/note_properties.dart';
 import 'package:smash/eu/hydrologis/smash/widgets/settings.dart';
 import 'package:smash/eu/hydrologis/smash/widgets/toolbar_tools.dart';
+import 'package:smash/generated/l10n.dart';
+import 'package:smashlibs/com/hydrologis/flutterlibs/utils/logging.dart';
 import 'package:smashlibs/smashlibs.dart';
 
 import 'mainview_utils.dart';
@@ -188,18 +189,23 @@ class MainViewWidgetState extends State<MainViewWidget>
     var mapState =
         Provider.of<SmashMapState>(mapBuilder.context, listen: false);
 
-    if (_mapController != null && _mapController.ready) {
+    if (_mapController != null) {
+      //&& _mapController.ready) {
       if (EXPERIMENTAL_ROTATION__ENABLED) {
         // check map centering and rotation
-        if (mapState.rotateOnHeading) {
-          GpsState gpsState = Provider.of<GpsState>(context, listen: false);
-          var heading = gpsState.lastGpsPosition.heading;
-          if (heading < 0) {
-            heading = 360 + heading;
+        try {
+          if (mapState.rotateOnHeading) {
+            GpsState gpsState = Provider.of<GpsState>(context, listen: false);
+            var heading = gpsState.lastGpsPosition.heading;
+            if (heading < 0) {
+              heading = 360 + heading;
+            }
+            _mapController.rotate(-heading);
+          } else {
+            _mapController.rotate(0);
           }
-          _mapController.rotate(-heading);
-        } else {
-          _mapController.rotate(0);
+        } on Exception catch (e, s) {
+          SMLogger().e("Error in experimental", e, s);
         }
       }
     }
@@ -271,20 +277,24 @@ class MainViewWidgetState extends State<MainViewWidget>
                             newPosition.center.latitude),
                         newPosition.zoom);
                   },
-                  onTap: (point) {
-                    GeometryEditManager().onMapTap(context, point);
-                  },
-                  onLongPress: (point) {
-                    GeometryEditManager().onMapLongTap(
-                        context, point, _mapController.zoom.round());
-                  },
+                  onTap: _handleTap,
+                  onLongPress: _handleLongTap,
+                  interactiveFlags: InteractiveFlag.all &
+                      ~InteractiveFlag.flingAnimation &
+                      ~InteractiveFlag.pinchMove &
+                      ~InteractiveFlag.rotate,
                 ),
                 layers: layers,
                 mapController: _mapController,
               ),
               mapBuilder.inProgress
                   ? Center(
-                      child: SmashCircularProgress(label: "Loading data..."))
+                      child: SmashCircularProgress(
+                        label: SL
+                            .of(context)
+                            .mainView_loadingData, //"Loading data...",
+                      ),
+                    )
                   : Container(),
               Align(
                 alignment: Alignment.bottomRight,
@@ -363,6 +373,15 @@ class MainViewWidgetState extends State<MainViewWidget>
         });
   }
 
+  void _handleTap(TapPosition tapPosition, LatLng latlng) {
+    GeometryEditManager().onMapTap(context, latlng);
+  }
+
+  void _handleLongTap(TapPosition tapPosition, LatLng latlng) {
+    GeometryEditManager()
+        .onMapLongTap(context, latlng, _mapController.zoom.round());
+  }
+
   Widget getExitTile(BuildContext context, SmashMapBuilder mapBuilder,
       SmashMapState mapState) {
     if (Platform.isIOS) {
@@ -373,7 +392,9 @@ class MainViewWidgetState extends State<MainViewWidget>
         return ListTile(
           leading: gpsStatusIcon,
           title: SmashUI.normalText(
-            gpsIsOff ? "Turn GPS on" : "Turn GPS off",
+            gpsIsOff
+                ? SL.of(context).mainView_turnGpsOn //"Turn GPS on"
+                : SL.of(context).mainView_turnGpsOff, //"Turn GPS off",
             bold: true,
             color: SmashColors.mainDecorations,
           ),
@@ -382,9 +403,15 @@ class MainViewWidgetState extends State<MainViewWidget>
             if (gpsIsOff) {
               gpsState.status = GpsStatus.ON_NO_FIX;
               await GpsHandler().init(gpsState);
+
+              await GpPreferences()
+                  .setBoolean(GpsHandler.GPS_FORCED_OFF_KEY, false);
             } else {
               gpsState.status = GpsStatus.OFF;
               await mapState.persistLastPosition();
+
+              await GpPreferences()
+                  .setBoolean(GpsHandler.GPS_FORCED_OFF_KEY, true);
               await GpsHandler().close();
             }
           },
@@ -398,15 +425,19 @@ class MainViewWidgetState extends State<MainViewWidget>
           size: SmashUI.MEDIUM_ICON_SIZE,
         ),
         title: SmashUI.normalText(
-          "Exit",
+          SL.of(context).mainView_exit, //"Exit",
           bold: true,
           color: SmashColors.mainDecorations,
         ),
         onTap: () async {
           bool doExit = await SmashDialogs.showConfirmDialog(
               mapBuilder.context,
-              "Are you sure you want to close the project?",
-              "Active operations will be stopped.");
+              SL
+                  .of(context)
+                  .mainView_areYouSureCloseTheProject, //"Are you sure you want to close the project?",
+              SL
+                  .of(context)
+                  .mainView_activeOperationsWillBeStopped); //"Active operations will be stopped.",);
           if (doExit != null && doExit) {
             await FenceMaster().writeFences();
             await mapState.persistLastPosition();
@@ -423,14 +454,17 @@ class MainViewWidgetState extends State<MainViewWidget>
     return <Widget>[
       IconButton(
           key: coachMarks.coachMarkButtonKey,
-          tooltip: "Show interactive coach marks.",
+          tooltip: SL
+              .of(context)
+              .mainView_showInteractiveCoachMarks, //"Show interactive coach marks.",
           icon: Icon(MdiIcons.helpCircleOutline),
           onPressed: () {
             coachMarks.showTutorial(context);
           }),
       IconButton(
           key: coachMarks.toolsButtonKey,
-          tooltip: "Open tools drawer.",
+          tooltip:
+              SL.of(context).mainView_openToolsDrawer, //"Open tools drawer.",
           icon: Icon(MdiIcons.tools),
           onPressed: () {
             _scaffoldKey.currentState.openEndDrawer();
@@ -463,7 +497,7 @@ class MainViewWidgetState extends State<MainViewWidget>
                 onPressed: () {
                   mapState.zoomIn();
                 },
-                tooltip: 'Zoom in',
+                tooltip: SL.of(context).mainView_zoomIn, //'Zoom in',
                 icon: Icon(
                   SmashIcons.zoomInIcon,
                   color: SmashColors.mainBackground,
@@ -479,7 +513,7 @@ class MainViewWidgetState extends State<MainViewWidget>
             onPressed: () {
               mapState.zoomOut();
             },
-            tooltip: 'Zoom out',
+            tooltip: SL.of(context).mainView_zoomOut, //'Zoom out',
             icon: Icon(
               SmashIcons.zoomOutIcon,
               color: SmashColors.mainBackground,
@@ -542,8 +576,10 @@ class MainViewWidgetState extends State<MainViewWidget>
           var noteInGpsMode = gpsState.insertInGpsMode;
           var titleWithMode = Column(
             children: [
-              SmashUI.titleText("Form Notes",
-                  color: SmashColors.mainSelection, bold: true),
+              SmashUI.titleText(
+                  SL.of(context).mainView_formNotes, //"Form Notes",
+                  color: SmashColors.mainSelection,
+                  bold: true),
               Padding(
                 padding: const EdgeInsets.only(top: 8.0),
                 child: GpsInsertionModeSelector(),
@@ -632,8 +668,10 @@ class MainViewWidgetState extends State<MainViewWidget>
 
           var titleWithMode = Column(
             children: [
-              SmashUI.titleText("Simple Notes",
-                  color: SmashColors.mainSelection, bold: true),
+              SmashUI.titleText(
+                  SL.of(context).mainView_simpleNotes, //"Simple Notes",
+                  color: SmashColors.mainSelection,
+                  bold: true),
               Padding(
                 padding: const EdgeInsets.only(top: 8.0),
                 child: GpsInsertionModeSelector(),
@@ -795,11 +833,14 @@ class MainViewWidgetState extends State<MainViewWidget>
       if (projectData.geopapMarkers != null &&
           projectData.geopapMarkers.length > 0) {
         var markerCluster = MarkerClusterLayerOptions(
+          zoomToBoundsOnClick: true,
+          // spiderfyCircleRadius: 150,
+          disableClusteringAtZoom: 16,
           maxClusterRadius: 80,
           //        height: 40,
           //        width: 40,
           fitBoundsOptions: FitBoundsOptions(
-            padding: EdgeInsets.all(50),
+            padding: EdgeInsets.all(180),
           ),
           markers: projectData.geopapMarkers,
           polygonOptions: PolygonOptions(

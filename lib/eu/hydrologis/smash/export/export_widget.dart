@@ -13,7 +13,6 @@ import 'package:material_design_icons_flutter/material_design_icons_flutter.dart
 import 'package:provider/provider.dart';
 import 'package:smash/eu/hydrologis/smash/export/geopackage_export.dart';
 import 'package:smash/eu/hydrologis/smash/export/gpx_kml_export.dart';
-import 'package:smashlibs/smashlibs.dart';
 import 'package:smash/eu/hydrologis/smash/export/gss_export.dart';
 /*
  * Copyright (c) 2019-2020. Antonello Andrea (www.hydrologis.com). All rights reserved.
@@ -22,6 +21,8 @@ import 'package:smash/eu/hydrologis/smash/export/gss_export.dart';
  */
 import 'package:smash/eu/hydrologis/smash/export/pdf_export.dart';
 import 'package:smash/eu/hydrologis/smash/models/project_state.dart';
+import 'package:smash/generated/l10n.dart';
+import 'package:smashlibs/smashlibs.dart';
 
 class ExportWidget extends StatefulWidget {
   ExportWidget({Key key}) : super(key: key);
@@ -37,6 +38,8 @@ class _ExportWidgetState extends State<ExportWidget> {
   String _gpxOutPath = "";
   int _kmlBuildStatus = 0;
   String _kmlOutPath = "";
+  int _imagesBuildStatus = 0;
+  String _imagesOutPath = "";
   int _gpkgBuildStatus = 0;
   String _gpkgOutPath = "";
 
@@ -52,6 +55,32 @@ class _ExportWidgetState extends State<ExportWidget> {
     setState(() {
       _pdfOutPath = outFilePath;
       _pdfBuildStatus = 2;
+    });
+  }
+
+  Future<void> exportImages(BuildContext context) async {
+    var exportsFolder = await Workspace.getExportsFolder();
+    var ts = TimeUtilities.DATE_TS_FORMATTER.format(DateTime.now());
+    var outFilePath =
+        FileUtilities.joinPaths(exportsFolder.path, "images_export_$ts");
+    var outFolder = Directory(outFilePath);
+    await outFolder.create();
+    var projectState = Provider.of<ProjectState>(context, listen: false);
+    var db = projectState.projectDb;
+
+    var images = db.getImages();
+    images.forEach((image) {
+      var dataId = image.imageDataId;
+      var name = image.text;
+      var imageDataBytes = db.getImageDataBytes(dataId);
+      var imagePath = FileUtilities.joinPaths(outFilePath, name);
+      var imageFile = File(imagePath);
+      imageFile.writeAsBytes(imageDataBytes);
+    });
+
+    setState(() {
+      _imagesOutPath = outFilePath;
+      _imagesBuildStatus = 2;
     });
   }
 
@@ -106,13 +135,13 @@ class _ExportWidgetState extends State<ExportWidget> {
   Widget build(BuildContext context) {
     return new Scaffold(
       appBar: new AppBar(
-        title: new Text("Export"),
+        title: new Text(SL.of(context).exportWidget_export), //"Export"
       ),
       body: ListView(children: <Widget>[
         ListTile(
             leading: _pdfBuildStatus == 0
                 ? Icon(
-                    MdiIcons.filePdf,
+                    MdiIcons.filePdfBox,
                     color: SmashColors.mainDecorations,
                   )
                 : _pdfBuildStatus == 1
@@ -121,9 +150,10 @@ class _ExportWidgetState extends State<ExportWidget> {
                         Icons.check,
                         color: SmashColors.mainDecorations,
                       ),
-            title: Text("${_pdfBuildStatus == 2 ? 'PDF exported' : 'PDF'}"),
+            title: Text(
+                "${_pdfBuildStatus == 2 ? SL.of(context).exportWidget_pdfExported : 'PDF'}"), //'PDF exported'
             subtitle: Text(
-                "${_pdfBuildStatus == 2 ? _pdfOutPath : 'Export project to Portable Document Format'}"),
+                "${_pdfBuildStatus == 2 ? _pdfOutPath : SL.of(context).exportWidget_exportToPortableDocumentFormat}"), //'Export project to Portable Document Format'
             onTap: () {
               setState(() {
                 _pdfOutPath = "";
@@ -144,9 +174,10 @@ class _ExportWidgetState extends State<ExportWidget> {
                         Icons.check,
                         color: SmashColors.mainDecorations,
                       ),
-            title: Text("${_gpxBuildStatus == 2 ? 'GPX exported' : 'GPX'}"),
+            title: Text(
+                "${_gpxBuildStatus == 2 ? SL.of(context).exportWidget_gpxExported : 'GPX'}"), //'GPX exported'
             subtitle: Text(
-                "${_gpxBuildStatus == 2 ? _gpxOutPath : 'Export project to GPX'}"),
+                "${_gpxBuildStatus == 2 ? _gpxOutPath : SL.of(context).exportWidget_exportToGpx}"), //'Export project to GPX'
             onTap: () {
               setState(() {
                 _gpxOutPath = "";
@@ -167,15 +198,40 @@ class _ExportWidgetState extends State<ExportWidget> {
                         Icons.check,
                         color: SmashColors.mainDecorations,
                       ),
-            title: Text("${_kmlBuildStatus == 2 ? 'KML exported' : 'KML'}"),
+            title: Text(
+                "${_kmlBuildStatus == 2 ? SL.of(context).exportWidget_kmlExported : 'KML'}"), //'KML exported'
             subtitle: Text(
-                "${_kmlBuildStatus == 2 ? _kmlOutPath : 'Export project to KML'}"),
+                "${_kmlBuildStatus == 2 ? _kmlOutPath : SL.of(context).exportWidget_exportToKml}"), //'Export project to KML'
             onTap: () {
               setState(() {
                 _kmlOutPath = "";
                 _kmlBuildStatus = 1;
               });
               buildGpx(context, true);
+//              Navigator.pop(context);
+            }),
+        ListTile(
+            leading: _imagesBuildStatus == 0
+                ? Icon(
+                    SmashIcons.imagesNotesIcon,
+                    color: SmashColors.mainDecorations,
+                  )
+                : _imagesBuildStatus == 1
+                    ? CircularProgressIndicator()
+                    : Icon(
+                        Icons.check,
+                        color: SmashColors.mainDecorations,
+                      ),
+            title: Text(
+                "${_imagesBuildStatus == 2 ? SL.of(context).exportWidget_imagesToFolderExported : SL.of(context).exportWidget_exportImagesToFolderTitle}"),
+            subtitle: Text(
+                "${_imagesBuildStatus == 2 ? _kmlOutPath : SL.of(context).exportWidget_exportImagesToFolder}"),
+            onTap: () {
+              setState(() {
+                _kmlOutPath = "";
+                _imagesBuildStatus = 1;
+              });
+              exportImages(context);
 //              Navigator.pop(context);
             }),
         ListTile(
@@ -191,9 +247,9 @@ class _ExportWidgetState extends State<ExportWidget> {
                         color: SmashColors.mainDecorations,
                       ),
             title: Text(
-                "${_gpkgBuildStatus == 2 ? 'Geopackage exported' : 'Geopackage'}"),
+                "${_gpkgBuildStatus == 2 ? SL.of(context).exportWidget_geopackageExported : 'Geopackage'}"), //'Geopackage exported'
             subtitle: Text(
-                "${_gpkgBuildStatus == 2 ? _gpkgOutPath : 'Export project to Geopackage'}"),
+                "${_gpkgBuildStatus == 2 ? _gpkgOutPath : SL.of(context).exportWidget_exportToGeopackage}"), //'Export project to Geopackage'
             onTap: () async {
               setState(() {
                 _gpkgOutPath = "";
@@ -208,7 +264,9 @@ class _ExportWidgetState extends State<ExportWidget> {
               color: SmashColors.mainDecorations,
             ),
             title: Text("GSS"),
-            subtitle: Text("Export to Geopaparazzi Survey Server"),
+            subtitle: Text(SL
+                .of(context)
+                .exportWidget_exportToGSS), //"Export to Geopaparazzi Survey Server"
             onTap: () {
               var projectState =
                   Provider.of<ProjectState>(context, listen: false);
