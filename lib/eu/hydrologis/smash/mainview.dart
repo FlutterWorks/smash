@@ -9,6 +9,8 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:after_layout/after_layout.dart';
+import 'package:dart_hydrologis_utils/dart_hydrologis_utils.dart'
+    hide TextStyle;
 import 'package:dart_jts/dart_jts.dart' hide Position;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -39,12 +41,12 @@ import 'package:smash/eu/hydrologis/smash/models/project_state.dart';
 import 'package:smash/eu/hydrologis/smash/models/tools/geometryeditor_state.dart';
 import 'package:smash/eu/hydrologis/smash/models/tools/tools.dart';
 import 'package:smash/eu/hydrologis/smash/project/data_loader.dart';
-import 'package:smash/eu/hydrologis/smash/project/objects/notes.dart';
 import 'package:smash/eu/hydrologis/smash/util/coachmarks.dart';
 import 'package:smash/eu/hydrologis/smash/util/experimentals.dart';
 import 'package:smash/eu/hydrologis/smash/util/fence.dart';
 import 'package:smash/eu/hydrologis/smash/widgets/gps_info_button.dart';
 import 'package:smash/eu/hydrologis/smash/widgets/gps_log_button.dart';
+import 'package:smash/eu/hydrologis/smash/widgets/image_widgets.dart';
 import 'package:smash/eu/hydrologis/smash/widgets/note_list.dart';
 import 'package:smash/eu/hydrologis/smash/widgets/note_properties.dart';
 import 'package:smash/eu/hydrologis/smash/widgets/settings.dart';
@@ -277,6 +279,7 @@ class MainViewWidgetState extends State<MainViewWidget>
                             newPosition.center.latitude),
                         newPosition.zoom);
                   },
+                  allowPanningOnScrollingParent: false,
                   onTap: _handleTap,
                   onLongPress: _handleLongTap,
                   interactiveFlags: InteractiveFlag.all &
@@ -373,8 +376,13 @@ class MainViewWidgetState extends State<MainViewWidget>
         });
   }
 
-  void _handleTap(TapPosition tapPosition, LatLng latlng) {
-    GeometryEditManager().onMapTap(context, latlng);
+  Future<void> _handleTap(TapPosition tapPosition, LatLng latlng) async {
+    if (_iconMode == IconMode.NAVIGATION_MODE) {
+      // just center on the tapped position
+      _mapController.move(latlng, _mapController.zoom);
+    } else {
+      await GeometryEditManager().onMapTap(context, latlng);
+    }
   }
 
   void _handleLongTap(TapPosition tapPosition, LatLng latlng) {
@@ -678,7 +686,10 @@ class MainViewWidgetState extends State<MainViewWidget>
               ),
             ],
           );
-          List<String> types = ["note", "image"];
+          List<String> types = ["note"];
+          if (!SmashPlatform.isDesktop()) {
+            types.add("image");
+          }
           var selectedType = await SmashDialogs.showComboDialog(
               mapBuilder.context, titleWithMode, types);
           var noteInGpsMode = gpsState.insertInGpsMode;

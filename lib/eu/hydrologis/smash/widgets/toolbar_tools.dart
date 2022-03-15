@@ -281,8 +281,8 @@ class _BottomToolsBarState extends State<BottomToolsBar> {
         onLongPress: () async {
           var t = geomEditState.editableGeometry.table;
           var db = geomEditState.editableGeometry.db;
-          bool hasDeleted =
-              await GeometryEditManager().deleteCurrentSelection(geomEditState);
+          bool hasDeleted = await GeometryEditManager()
+              .deleteCurrentSelection(context, geomEditState);
           if (hasDeleted) {
             // reload layer geoms
             await reloadDbLayers(db, t);
@@ -378,8 +378,10 @@ class _BottomToolsBarState extends State<BottomToolsBar> {
                 await Navigator.push(
                     context,
                     MaterialPageRoute(
-                        builder: (context) =>
-                            FeatureAttributesViewer(totalQueryResult)));
+                        builder: (context) => FeatureAttributesViewer(
+                              totalQueryResult,
+                              readOnly: false,
+                            )));
               }
               // reload layer geoms
               await reloadDbLayers(db, table);
@@ -456,7 +458,7 @@ class RulerButton extends StatelessWidget {
           size: _iconSize,
         ),
       );
-      if (rulerState.lengthMeters != null) {
+      if (rulerState.lengthMeters != null && rulerState.lengthMeters != 0) {
         w = Badge(
           badgeColor: SmashColors.mainSelection,
           shape: BadgeShape.square,

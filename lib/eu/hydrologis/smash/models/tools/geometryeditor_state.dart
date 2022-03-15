@@ -6,23 +6,20 @@
 
 import 'package:dart_hydrologis_db/dart_hydrologis_db.dart';
 import 'package:dart_jts/dart_jts.dart' hide Polygon;
-import 'package:dart_postgis/dart_postgis.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_geopackage/flutter_geopackage.dart';
 import 'package:flutter_map/plugin_api.dart';
 import 'package:flutter_map_dragmarker/dragmarker.dart';
 import 'package:flutter_map_line_editor/polyeditor.dart';
 import 'package:latlong2/latlong.dart' hide Path;
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:smash/eu/hydrologis/smash/maps/layers/core/layermanager.dart';
 import 'package:smash/eu/hydrologis/smash/maps/layers/core/layersource.dart';
-import 'package:smash/eu/hydrologis/smash/maps/layers/types/geopackage.dart';
-import 'package:smash/eu/hydrologis/smash/maps/layers/types/postgis.dart';
 import 'package:smash/eu/hydrologis/smash/models/mapbuilder.dart';
 import 'package:smash/eu/hydrologis/smash/models/tools/tools.dart';
 import 'package:smash/eu/hydrologis/smash/widgets/settings.dart';
 import 'package:smashlibs/smashlibs.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
 class GeometryEditorState extends ChangeNotifier {
   static final type = BottomToolbarToolsRegistry.GEOMEDITOR;
@@ -103,7 +100,14 @@ class GeometryEditManager {
 
   DragMarker pointEditor;
 
+  Widget _intermediateHandlerIcon;
+  double _handleIconSize;
+  double _intermediateHandleIconSize;
+  Widget _dragHandlerIcon;
+  Function _callbackRefresh;
+
   bool _isEditing = false;
+  bool _polygonInWork = false;
 
   factory GeometryEditManager() {
     return _singleton;
@@ -111,105 +115,111 @@ class GeometryEditManager {
 
   GeometryEditManager._internal();
 
+  bool isEditing() => _isEditing;
+
   void startEditing(EditableGeometry editGeometry, Function callbackRefresh,
       {EGeometryType geomType}) {
     if (!_isEditing) {
       if (editGeometry != null) {
-        resetToNulls();
+        // resetToNulls();
 
-        double handleIconSize = GpPreferences()
+        _callbackRefresh = callbackRefresh;
+        _handleIconSize = GpPreferences()
             .getIntSync(SETTINGS_KEY_EDIT_HANLDE_ICON_SIZE, 25)
             .toDouble();
-        double intermediateHandleIconSize = GpPreferences()
+        _intermediateHandleIconSize = GpPreferences()
             .getIntSync(SETTINGS_KEY_EDIT_HANLDEINTERMEDIATE_ICON_SIZE, 20)
             .toDouble();
-        Widget dragHandlerIcon = Container(
+        _dragHandlerIcon = Container(
           decoration: BoxDecoration(
               color: Colors.yellow,
               borderRadius:
-                  BorderRadius.all(Radius.circular(handleIconSize / 4)),
+                  BorderRadius.all(Radius.circular(_handleIconSize / 4)),
               border: Border.all(color: Colors.black, width: 2)),
         );
-        Widget intermediateHandlerIcon = Container(
+
+        _intermediateHandlerIcon = Container(
           child: Icon(
             MdiIcons.plus,
-            size: intermediateHandleIconSize / 2,
+            size: _intermediateHandleIconSize / 2,
             color: Colors.black,
           ),
           decoration: BoxDecoration(
               color: Colors.yellow,
-              borderRadius:
-                  BorderRadius.all(Radius.circular(intermediateHandleIconSize)),
+              borderRadius: BorderRadius.all(
+                  Radius.circular(_intermediateHandleIconSize)),
               border: Border.all(color: Colors.black, width: 2)),
         );
 
-        geomType = EGeometryType.forGeometry(editGeometry.geometry);
-        if (geomType.isLine()) {
-          var geomPoints = editGeometry.geometry
-              .getCoordinates()
-              .map((c) => LatLng(c.y, c.x))
-              .toList();
-          polyLines = [];
-          editPolyline = new Polyline(
-              color: editBorder,
-              strokeWidth: editStrokeWidth,
-              points: geomPoints);
-          polyEditor = new PolyEditor(
-            addClosePathMarker: false,
-            points: geomPoints,
-            pointIcon: dragHandlerIcon,
-            pointIconSize: Size(handleIconSize, handleIconSize),
-            intermediateIconSize:
-                Size(intermediateHandleIconSize, intermediateHandleIconSize),
-            intermediateIcon: intermediateHandlerIcon,
-            callbackRefresh: callbackRefresh,
-          );
-          polyLines.add(editPolyline);
-        } else if (geomType.isPolygon()) {
-          var geomPoints = editGeometry.geometry
-              .getCoordinates()
-              .map((c) => LatLng(c.y, c.x))
-              .toList();
-          geomPoints.removeLast();
+        // geomType = EGeometryType.forGeometry(editGeometry.geometry);
+        // if (geomType.isLine()) {
+        //   var geomPoints = editGeometry.geometry
+        //       .getCoordinates()
+        //       .map((c) => LatLng(c.y, c.x))
+        //       .toList();
+        //   polyLines = [];
+        //   editPolyline = new Polyline(
+        //       color: editBorder,
+        //       strokeWidth: editStrokeWidth,
+        //       points: geomPoints);
+        //   polyEditor = new PolyEditor(
+        //     addClosePathMarker: false,
+        //     points: geomPoints,
+        //     pointIcon: _dragHandlerIcon,
+        //     pointIconSize: Size(_handleIconSize, _handleIconSize),
+        //     intermediateIconSize:
+        //         Size(_intermediateHandleIconSize, _intermediateHandleIconSize),
+        //     intermediateIcon: _intermediateHandlerIcon,
+        //     callbackRefresh: callbackRefresh,
+        //   );
+        //   polyLines.add(editPolyline);
+        // } else if (geomType.isPolygon()) {
+        //   var geomPoints = editGeometry.geometry
+        //       .getCoordinates()
+        //       .map((c) => LatLng(c.y, c.x))
+        //       .toList();
+        //   geomPoints.removeLast();
 
-          polygons = [];
-          editPolygon = new Polygon(
-            color: editFill,
-            borderColor: editBorder,
-            borderStrokeWidth: editStrokeWidth,
-            points: geomPoints,
-          );
-          var backEditPolygon = new Polygon(
-            color: editFill.withAlpha(0),
-            borderColor: editBackBorder,
-            borderStrokeWidth: editStrokeWidth + 3,
-            points: geomPoints,
-          );
-          polyEditor = new PolyEditor(
-            addClosePathMarker: true,
-            points: geomPoints,
-            pointIcon: dragHandlerIcon,
-            intermediateIcon: intermediateHandlerIcon,
-            pointIconSize: Size(handleIconSize, handleIconSize),
-            intermediateIconSize:
-                Size(intermediateHandleIconSize, intermediateHandleIconSize),
-            callbackRefresh: callbackRefresh,
-          );
+        //   polygons = [];
+        //   editPolygon = new Polygon(
+        //     color: editFill,
+        //     borderColor: editBorder,
+        //     borderStrokeWidth: editStrokeWidth,
+        //     points: geomPoints,
+        //   );
+        //   var backEditPolygon = new Polygon(
+        //     color: editFill.withAlpha(0),
+        //     borderColor: editBackBorder,
+        //     borderStrokeWidth: editStrokeWidth + 3,
+        //     points: geomPoints,
+        //   );
+        //   polyEditor = new PolyEditor(
+        //     addClosePathMarker: true,
+        //     points: geomPoints,
+        //     pointIcon: _dragHandlerIcon,
+        //     intermediateIcon: _intermediateHandlerIcon,
+        //     pointIconSize: Size(_handleIconSize, _handleIconSize),
+        //     intermediateIconSize:
+        //         Size(_intermediateHandleIconSize, _intermediateHandleIconSize),
+        //     callbackRefresh: callbackRefresh,
+        //   );
 
-          polygons.add(backEditPolygon);
-          polygons.add(editPolygon);
-        } else if (geomType.isPoint()) {
-          var coord = editGeometry.geometry.getCoordinate();
+        //   polygons.add(backEditPolygon);
+        //   polygons.add(editPolygon);
+        // } else if (geomType.isPoint()) {
 
-          pointEditor = DragMarker(
-            point: LatLng(coord.y, coord.x),
-            width: handleIconSize,
-            height: handleIconSize,
-            builder: (ctx) => Container(child: dragHandlerIcon),
-            onDragEnd: (details, point) {},
-            updateMapNearEdge: false,
-          );
-        }
+        // When starting editing it is always a point.
+        var coord = editGeometry.geometry.getCoordinate();
+
+        pointEditor = DragMarker(
+          point: LatLng(coord.y, coord.x),
+          width: _handleIconSize,
+          height: _handleIconSize,
+          builder: (ctx) => Container(child: _dragHandlerIcon),
+          onDragEnd: (details, point) {},
+          updateMapNearEdge: false,
+        );
+        // }
       }
       _isEditing = true;
     }
@@ -229,6 +239,16 @@ class GeometryEditManager {
     polygons = null;
     editPolygon = null;
     pointEditor = null;
+  }
+
+  void cancel(BuildContext context) {
+    GeometryEditorState geomEditorState =
+        Provider.of<GeometryEditorState>(context, listen: false);
+    geomEditorState.editableGeometry = null;
+    GeometryEditManager().stopEditing();
+    SmashMapBuilder mapBuilder =
+        Provider.of<SmashMapBuilder>(context, listen: false);
+    mapBuilder.reBuild();
   }
 
   void addPoint(LatLng ll) {
@@ -290,12 +310,247 @@ class GeometryEditManager {
     }
   }
 
-  void onMapTap(BuildContext context, LatLng point) {
+  Future<void> onMapTap(BuildContext context, LatLng point) async {
     if (_isEditing) {
-      if (polyEditor != null) {
+      if (polyEditor != null && !_polygonInWork) {
         addPoint(point);
+      } else {
+        resetToNulls();
+        // geometry is not yet of the layer type
+        GeometryEditorState geomEditorState =
+            Provider.of<GeometryEditorState>(context, listen: false);
+        var editableGeometry = geomEditorState.editableGeometry;
+
+        var tableName = SqlName(editableGeometry.table);
+        var gc =
+            await editableGeometry.db.getGeometryColumnsForTable(tableName);
+        var gType = gc.geometryType;
+
+        if (gType.isLine()) {
+          await _completeFirstLineGeometry(
+              editableGeometry, point, tableName, gc, geomEditorState, context);
+        } else if (gType.isPolygon()) {
+          await _handlePolygonGeometry(
+              editableGeometry, point, tableName, gc, geomEditorState, context);
+        }
+      }
+    } else {
+      GeometryEditorState geomEditorState =
+          Provider.of<GeometryEditorState>(context, listen: false);
+      if (geomEditorState.isEnabled) {
+        // add a new geometry to a layer selected by the user
+        await _createNewGeometryOnSelectedLayer(
+            context, point, geomEditorState);
       }
     }
+  }
+
+  /// Create the line geometry. Since 2 coordinates are enough to create a line,
+  /// when this method is called, the usable line geometry and the appropriate layer
+  /// can be created (before a opint layer was used for the first point)
+  Future<void> _completeFirstLineGeometry(
+      EditableGeometry editableGeometry,
+      LatLng point,
+      SqlName tableName,
+      gc,
+      GeometryEditorState geomEditorState,
+      BuildContext context) async {
+    var gf = GeometryFactory.defaultPrecision();
+    Map<String, DbVectorLayerSource> name2SourceMap = _getName2SourcesMap();
+    var vectorLayer = name2SourceMap[editableGeometry.table];
+    var db = await DbVectorLayerSource.getDb(vectorLayer);
+    var dataPrj = SmashPrj.fromSrid(vectorLayer.getSrid());
+    var coordinate = editableGeometry.geometry.getCoordinate();
+    var p2 = gf.createPoint(Coordinate(point.longitude, point.latitude));
+    SmashPrj.transformGeometry(SmashPrj.EPSG4326, dataPrj, p2);
+    var geometry = gf.createLineString([coordinate, p2.getCoordinate()]);
+    // var sql =
+    //     "INSERT INTO ${tableName.fixedName} (${gc.geometryColumnName}) VALUES (?);";
+    // var lastId = -1;
+    // if (vectorLayer is DbVectorLayerSource) {
+    //   var sqlObj = db.geometryToSql(geometry);
+    //   lastId = db.execute(sql, arguments: [sqlObj], getLastInsertId: true);
+    // }
+    EditableGeometry editGeometry = EditableGeometry();
+    editGeometry.geometry = geometry;
+    editGeometry.db = db;
+    editGeometry.id = -1;
+    editGeometry.table = vectorLayer.getName();
+    geomEditorState.editableGeometry = editGeometry;
+
+    _makeLineEditor(editGeometry);
+
+    vectorLayer.isLoaded = false;
+    SmashMapBuilder mapBuilder =
+        Provider.of<SmashMapBuilder>(context, listen: false);
+    var layers = await LayerManager().loadLayers(mapBuilder.context);
+    mapBuilder.oneShotUpdateLayers = layers;
+    mapBuilder.reBuild();
+  }
+
+  Future<void> _handlePolygonGeometry(
+      EditableGeometry editableGeometry,
+      LatLng point,
+      SqlName tableName,
+      gc,
+      GeometryEditorState geomEditorState,
+      BuildContext context) async {
+    var gf = GeometryFactory.defaultPrecision();
+    Map<String, DbVectorLayerSource> name2SourceMap = _getName2SourcesMap();
+    var vectorLayer = name2SourceMap[editableGeometry.table];
+    var db = await DbVectorLayerSource.getDb(vectorLayer);
+    var dataPrj = SmashPrj.fromSrid(vectorLayer.getSrid());
+    var coordinates = editableGeometry.geometry.getCoordinates();
+
+    if (coordinates.length == 1) {
+      // point, we need to transit per line until we have coords to create a polygon
+      var p2 = gf.createPoint(Coordinate(point.longitude, point.latitude));
+      SmashPrj.transformGeometry(SmashPrj.EPSG4326, dataPrj, p2);
+      var geometry = gf.createLineString([coordinates[0], p2.getCoordinate()]);
+
+      EditableGeometry editGeometry = EditableGeometry();
+      editGeometry.geometry = geometry;
+      editGeometry.db = db;
+      editGeometry.id = -1;
+      editGeometry.table = vectorLayer.getName();
+      geomEditorState.editableGeometry = editGeometry;
+
+      _makeLineEditor(editGeometry);
+
+      _polygonInWork = true;
+    } else if (coordinates.length > 1) {
+      var coords = <Coordinate>[];
+      coords.addAll(coordinates);
+
+      var p3 = gf.createPoint(Coordinate(point.longitude, point.latitude));
+      SmashPrj.transformGeometry(SmashPrj.EPSG4326, dataPrj, p3);
+      coords.add(p3.getCoordinate());
+      coords.add(coords[0]);
+      var geometry = gf.createPolygonFromCoords(coords);
+      // var sql =
+      //     "INSERT INTO ${tableName.fixedName} (${gc.geometryColumnName}) VALUES (?);";
+      // var lastId = -1;
+      // if (vectorLayer is DbVectorLayerSource) {
+      //   var sqlObj = db.geometryToSql(geometry);
+      //   lastId = db.execute(sql, arguments: [sqlObj], getLastInsertId: true);
+      // }
+      EditableGeometry editGeometry = EditableGeometry();
+      editGeometry.geometry = geometry;
+      editGeometry.db = db;
+      editGeometry.id = -1;
+      editGeometry.table = vectorLayer.getName();
+      geomEditorState.editableGeometry = editGeometry;
+
+      _makePolygonEditor(editGeometry);
+
+      _polygonInWork = false;
+    }
+
+    vectorLayer.isLoaded = false;
+    SmashMapBuilder mapBuilder =
+        Provider.of<SmashMapBuilder>(context, listen: false);
+    var layers = await LayerManager().loadLayers(mapBuilder.context);
+    mapBuilder.oneShotUpdateLayers = layers;
+    mapBuilder.reBuild();
+  }
+
+  /// Ask the user on which layer to create a new geometry and make a fist one.
+  Future<void> _createNewGeometryOnSelectedLayer(BuildContext context,
+      LatLng point, GeometryEditorState geomEditorState) async {
+    Map<String, DbVectorLayerSource> name2SourceMap = _getName2SourcesMap();
+    if (name2SourceMap.length == 0) {
+      await SmashDialogs.showWarningDialog(
+          context, "No editable layer is currently loaded.");
+    } else {
+      var namesList = name2SourceMap.keys.toList();
+      String selectedName;
+      if (namesList.length > 1) {
+        selectedName = await SmashDialogs.showComboDialog(
+            context, "Create a new feature in the selected layer?", namesList,
+            allowCancel: true);
+      } else {
+        selectedName = namesList[0];
+      }
+      if (selectedName != null) {
+        var vectorLayer = name2SourceMap[selectedName];
+        var db = await DbVectorLayerSource.getDb(vectorLayer);
+        var table = vectorLayer.getName();
+        var tableColumns = await db.getTableColumns(SqlName(table));
+
+        // check if there is a pk and if the columns are set to be non null in other case
+        bool hasPk = false;
+        bool hasNonNull = false;
+        tableColumns.forEach((tc) {
+          var pk = tc[2];
+          if (pk == 1) {
+            hasPk = true;
+          } else {
+            var nonNull = tc[3];
+            if (nonNull == 1) {
+              hasNonNull = true;
+            }
+          }
+        });
+        if (!hasPk || hasNonNull) {
+          await SmashDialogs.showWarningDialog(context,
+              "Currently only editing of tables with a primary key and nullable columns is supported.");
+          return;
+        }
+
+        // create a minimal geometry to work on
+        var tableName = SqlName(table);
+        var gc = await db.getGeometryColumnsForTable(tableName);
+        var gType = gc.geometryType;
+        Geometry geometry;
+        var gf = GeometryFactory.defaultPrecision();
+        var dataPrj = SmashPrj.fromSrid(vectorLayer.getSrid());
+
+        // Create first as just point, even if the layer is of different type
+        geometry = gf.createPoint(Coordinate(point.longitude, point.latitude));
+
+        SmashPrj.transformGeometry(SmashPrj.EPSG4326, dataPrj, geometry);
+        var lastId = -1;
+        if (gType.isPoint()) {
+          var sql =
+              "INSERT INTO ${tableName.fixedName} (${gc.geometryColumnName}) VALUES (?);";
+          if (vectorLayer is DbVectorLayerSource) {
+            var sqlObj = db.geometryToSql(geometry);
+            lastId =
+                db.execute(sql, arguments: [sqlObj], getLastInsertId: true);
+          }
+        }
+
+        EditableGeometry editGeom2 = EditableGeometry();
+        editGeom2.geometry = geometry;
+        editGeom2.db = db;
+        editGeom2.id = lastId;
+        editGeom2.table = table;
+        geomEditorState.editableGeometry = editGeom2;
+
+        // reload layer geoms
+        vectorLayer.isLoaded = false;
+        SmashMapBuilder mapBuilder =
+            Provider.of<SmashMapBuilder>(context, listen: false);
+        var layers = await LayerManager().loadLayers(mapBuilder.context);
+        mapBuilder.oneShotUpdateLayers = layers;
+        mapBuilder.reBuild();
+      }
+    }
+  }
+
+  Map<String, DbVectorLayerSource> _getName2SourcesMap() {
+    List<LayerSource> editableLayers = LayerManager()
+        .getLayerSources()
+        .reversed
+        .where((l) => l is DbVectorLayerSource && l.isActive())
+        .toList();
+    Map<String, DbVectorLayerSource> name2SourceMap = {};
+    editableLayers.forEach((element) {
+      if (element is DbVectorLayerSource) {
+        name2SourceMap[element.getName()] = element;
+      }
+    });
+    return name2SourceMap;
   }
 
   /// On map long tap, if the editor state is on, the feature is selected or deselected.
@@ -307,19 +562,19 @@ class GeometryEditManager {
       return;
     }
 
+    resetToNulls();
+
     List<LayerSource> editableLayers = LayerManager()
         .getLayerSources()
         .reversed
         .where((l) => l is DbVectorLayerSource && l.isActive())
         .toList();
 
-    var radius = ZOOM2TOUCHRADIUS[zoom];
+    var radius = ZOOM2TOUCHRADIUS[zoom] * 10;
 
     var env =
         Envelope.fromCoordinate(Coordinate(point.longitude, point.latitude));
     env.expandByDistance(radius);
-
-    var currentEditing = editorState.editableGeometry;
 
     EditableGeometry editGeom;
     double minDist = 1000000000;
@@ -348,13 +603,13 @@ class GeometryEditManager {
       var primaryKey = await db.getPrimaryKey(sqlName);
       // if polygon, then it has to be inside,
       // for other types we use the buffer
-      Envelope checkEnv;
+      // Envelope checkEnv;
       Geometry checkGeom;
       if (gc.geometryType.isPolygon()) {
-        checkEnv = touchPointLayerPrj.getEnvelopeInternal();
+        // checkEnv = touchPointLayerPrj.getEnvelopeInternal();
         checkGeom = touchPointLayerPrj;
       } else {
-        checkEnv = touchBufferLayerPrj.getEnvelopeInternal();
+        // checkEnv = touchBufferLayerPrj.getEnvelopeInternal();
         checkGeom = touchBufferLayerPrj;
       }
       var geomsIntersected = await db.getGeometriesIn(
@@ -380,6 +635,12 @@ class GeometryEditManager {
               editGeom.db = db;
               editGeom.id = id;
               editGeom.table = tableName;
+
+              if (gc.geometryType.isLine()) {
+                _makeLineEditor(editGeom);
+              } else if (gc.geometryType.isPolygon()) {
+                _makePolygonEditor(editGeom);
+              }
             }
           }
         }
@@ -392,6 +653,7 @@ class GeometryEditManager {
       } else {
         editorState.editableGeometry = editGeom;
         _isEditing = false;
+
         SmashMapBuilder builder =
             Provider.of<SmashMapBuilder>(context, listen: false);
         builder.reBuild();
@@ -403,104 +665,65 @@ class GeometryEditManager {
     editorState.editableGeometry = null;
     stopEditing();
 
-    // propose to add a new geometry here if no geometry was selected
-    if (currentEditing == null) {
-      Map<String, DbVectorLayerSource> name2SourceMap = {};
-      editableLayers.forEach((element) {
-        if (element is DbVectorLayerSource) {
-          name2SourceMap[element.getName()] = element;
-        }
-      });
-      if (name2SourceMap.length == 0) {
-        await SmashDialogs.showWarningDialog(
-            context, "No editable layer is currently loaded.");
-      } else {
-        var selectedName = await SmashDialogs.showComboDialog(
-            context,
-            "Create a new feature in the selected layer?",
-            name2SourceMap.keys.toList(),
-            allowCancel: true);
-        if (selectedName != null) {
-          var vectorLayer = name2SourceMap[selectedName];
-          var db = await DbVectorLayerSource.getDb(vectorLayer);
-          var table = vectorLayer.getName();
-          var tableColumns = await db.getTableColumns(SqlName(table));
+    SmashMapBuilder builder =
+        Provider.of<SmashMapBuilder>(context, listen: false);
+    builder.reBuild();
+  }
 
-          // check if there is a pk and if the columns are set to be non null in other case
-          bool hasPk = false;
-          bool hasNonNull = false;
-          tableColumns.forEach((tc) {
-            var pk = tc[2];
-            if (pk == 1) {
-              hasPk = true;
-            } else {
-              var nonNull = tc[3];
-              if (nonNull == 1) {
-                hasNonNull = true;
-              }
-            }
-          });
-          if (!hasPk || hasNonNull) {
-            await SmashDialogs.showWarningDialog(context,
-                "Currently only editing of tables with a primary key and nullable columns is supported.");
-            return;
-          }
+  void _makeLineEditor(EditableGeometry editGeom) {
+    var geomPoints = editGeom.geometry
+        .getCoordinates()
+        .map((c) => LatLng(c.y, c.x))
+        .toList();
+    polyLines = [];
+    editPolyline = new Polyline(
+        color: editBorder, strokeWidth: editStrokeWidth, points: geomPoints);
+    polyEditor = new PolyEditor(
+      addClosePathMarker: false,
+      points: geomPoints,
+      pointIcon: _dragHandlerIcon,
+      pointIconSize: Size(_handleIconSize, _handleIconSize),
+      intermediateIconSize:
+          Size(_intermediateHandleIconSize, _intermediateHandleIconSize),
+      intermediateIcon: _intermediateHandlerIcon,
+      callbackRefresh: _callbackRefresh,
+    );
+    polyLines.add(editPolyline);
+  }
 
-          // create a minimal geometry to work on
-          var tableName = SqlName(table);
-          var gc = await db.getGeometryColumnsForTable(tableName);
-          var gType = gc.geometryType;
-          Geometry geometry;
-          var gf = GeometryFactory.defaultPrecision();
-          var dataPrj = SmashPrj.fromSrid(vectorLayer.getSrid());
-          var d = 0.0001;
-          if (gType.isPoint()) {
-            geometry =
-                gf.createPoint(Coordinate(point.longitude, point.latitude));
-          } else if (gType.isLine()) {
-            geometry = gf.createLineString([
-              Coordinate(point.longitude, point.latitude),
-              Coordinate(point.longitude + d, point.latitude)
-            ]);
-          } else if (gType.isPolygon()) {
-            geometry = gf.createPolygonFromCoords([
-              Coordinate(point.longitude, point.latitude),
-              Coordinate(point.longitude + d, point.latitude),
-              Coordinate(point.longitude, point.latitude + d),
-              Coordinate(point.longitude, point.latitude),
-            ]);
-          }
-          SmashPrj.transformGeometry(SmashPrj.EPSG4326, dataPrj, geometry);
-          var sql =
-              "INSERT INTO ${tableName.fixedName} (${gc.geometryColumnName}) VALUES (?);";
-          var lastId;
-          if (vectorLayer is DbVectorLayerSource) {
-            var sqlObj = db.geometryToSql(geometry);
-            lastId =
-                db.execute(sql, arguments: [sqlObj], getLastInsertId: true);
-          }
+  void _makePolygonEditor(EditableGeometry editGeom) {
+    var geomPoints = editGeom.geometry
+        .getCoordinates()
+        .map((c) => LatLng(c.y, c.x))
+        .toList();
+    geomPoints.removeLast();
 
-          EditableGeometry editGeom2 = EditableGeometry();
-          editGeom2.geometry = geometry;
-          editGeom2.db = db;
-          editGeom2.id = lastId;
-          editGeom2.table = table;
-          editorState.editableGeometry = editGeom;
+    polygons = [];
+    editPolygon = new Polygon(
+      color: editFill,
+      borderColor: editBorder,
+      borderStrokeWidth: editStrokeWidth,
+      points: geomPoints,
+    );
+    var backEditPolygon = new Polygon(
+      color: editFill.withAlpha(0),
+      borderColor: editBackBorder,
+      borderStrokeWidth: editStrokeWidth + 3,
+      points: geomPoints,
+    );
+    polyEditor = new PolyEditor(
+      addClosePathMarker: true,
+      points: geomPoints,
+      pointIcon: _dragHandlerIcon,
+      intermediateIcon: _intermediateHandlerIcon,
+      pointIconSize: Size(_handleIconSize, _handleIconSize),
+      intermediateIconSize:
+          Size(_intermediateHandleIconSize, _intermediateHandleIconSize),
+      callbackRefresh: _callbackRefresh,
+    );
 
-          // reload layer geoms
-          vectorLayer.isLoaded = false;
-          SmashMapBuilder mapBuilder =
-              Provider.of<SmashMapBuilder>(context, listen: false);
-          var layers = await LayerManager().loadLayers(mapBuilder.context);
-          mapBuilder.oneShotUpdateLayers = layers;
-          mapBuilder.reBuild();
-        }
-      }
-    } else {
-      SmashMapBuilder builder =
-          Provider.of<SmashMapBuilder>(context, listen: false);
-      builder.reBuild();
-    }
+    polygons.add(backEditPolygon);
+    polygons.add(editPolygon);
   }
 
   Future<void> saveCurrentEdit(GeometryEditorState geomEditState) async {
@@ -545,15 +768,37 @@ class GeometryEditManager {
         SmashPrj.transformGeometry(SmashPrj.EPSG4326, to, geom);
       }
 
-      dynamic sqlObj = db.geometryToSql(geom);
-      Map<String, dynamic> newRow = {geometryColumn.geometryColumnName: sqlObj};
-      await db.updateMap(
-          tableName, newRow, "$primaryKey=${editableGeometry.id}");
+      if (editableGeometry.id != -1) {
+        dynamic sqlObj = db.geometryToSql(geom);
+        Map<String, dynamic> newRow = {
+          geometryColumn.geometryColumnName: sqlObj
+        };
+        await db.updateMap(
+            tableName, newRow, "$primaryKey=${editableGeometry.id}");
+      } else {
+        // insert new
+        Map<String, DbVectorLayerSource> name2SourceMap = _getName2SourcesMap();
+        var vectorLayer = name2SourceMap[editableGeometry.table];
+        var db = await DbVectorLayerSource.getDb(vectorLayer);
+        var tableName = SqlName(editableGeometry.table);
+        var gc =
+            await editableGeometry.db.getGeometryColumnsForTable(tableName);
+        var lastId = -1;
+        var sql =
+            "INSERT INTO ${tableName.fixedName} (${gc.geometryColumnName}) VALUES (?);";
+        if (vectorLayer is DbVectorLayerSource) {
+          var sqlObj = db.geometryToSql(geom);
+          lastId = db.execute(sql, arguments: [sqlObj], getLastInsertId: true);
+          editableGeometry.geometry = geom;
+          editableGeometry.id = lastId;
+        }
+      }
     }
   }
 
   /// Deletes the feature of the currentl selected geometry from the database.
-  Future<bool> deleteCurrentSelection(GeometryEditorState geomEditState) async {
+  Future<bool> deleteCurrentSelection(
+      BuildContext context, GeometryEditorState geomEditState) async {
     var editableGeometry = geomEditState.editableGeometry;
     if (editableGeometry != null) {
       var id = editableGeometry.id;
@@ -565,6 +810,10 @@ class GeometryEditManager {
         await db.execute(sql);
 
         geomEditState.editableGeometry = null;
+
+        resetToNulls();
+        cancel(context);
+
         return true;
       }
     }
