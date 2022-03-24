@@ -5,7 +5,7 @@ name: smash
 description: The Smart Mobile Application for Surveyor's Happyness.
 publish_to: none
 
-version: 1.7.3+65 # we keep the build number growing to have it properly handled in android
+version: 1.7.4+66 # we keep the build number growing to have it properly handled in android
 # agvtool new-version -all 58
 
 environment:
@@ -29,7 +29,7 @@ dependencies:
   # path: ../flutter_geopackage/
   #  git:
   #    url: https://github.com/moovida/flutter_geopackage.git
-  dart_hydrologis_db: ^0.7.1
+  dart_hydrologis_db: ^0.7.2
   # path: ../dart_hydrologis_db/
   # git:
   #  url: https://github.com/moovida/dart_hydrologis_db.git
@@ -43,7 +43,7 @@ dependencies:
     # path: ../smash_import_export_plugins/
     git:
       url: https://github.com/geopaparazzi/smash_import_export_plugins.git
-      ref: f976890
+      ref: d4d71e3
 
 
   dart_shp: ^0.4.0
