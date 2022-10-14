@@ -3,7 +3,7 @@
  * Use of this source code is governed by a GPL3 license that can be
  * found in the LICENSE file.
  */
-import 'package:catcher/catcher.dart';
+// import 'package:catcher/catcher.dart';
 import 'package:dart_hydrologis_db/dart_hydrologis_db.dart';
 import 'package:dart_jts/dart_jts.dart';
 import 'package:flutter/material.dart';
@@ -13,6 +13,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:proj4dart/proj4dart.dart';
 import 'package:provider/provider.dart';
 import 'package:smash/eu/hydrologis/smash/gps/gps.dart';
+import 'package:smash/eu/hydrologis/smash/l10n/localization.dart';
 import 'package:smash/eu/hydrologis/smash/maps/layers/core/layermanager.dart';
 import 'package:smash/eu/hydrologis/smash/models/gps_state.dart';
 import 'package:smash/eu/hydrologis/smash/models/map_state.dart';
@@ -34,20 +35,21 @@ import 'generated/l10n.dart';
 const DOCATCHER = false;
 
 void main() {
-  if (DOCATCHER) {
-    CatcherOptions debugOptions =
-        CatcherOptions(SilentReportMode(), [ConsoleHandler()]);
-    CatcherOptions releaseOptions = CatcherOptions(DialogReportMode(), [
-      EmailManualHandler(["feedback@geopaparazzi.eu"])
-    ]);
+  // TODO endable catcher again once it is aligned with libs
+  // if (DOCATCHER) {
+  //   CatcherOptions debugOptions =
+  //       CatcherOptions(SilentReportMode(), [ConsoleHandler()]);
+  //   CatcherOptions releaseOptions = CatcherOptions(DialogReportMode(), [
+  //     EmailManualHandler(["feedback@geopaparazzi.eu"])
+  //   ]);
 
-    Catcher(
-        rootWidget: getMainWidget(),
-        debugConfig: debugOptions,
-        releaseConfig: releaseOptions);
-  } else {
-    runApp(getMainWidget());
-  }
+  //   Catcher(
+  //       rootWidget: getMainWidget(),
+  //       debugConfig: debugOptions,
+  //       releaseConfig: releaseOptions);
+  // } else {
+  runApp(getMainWidget());
+  // }
 }
 
 MultiProvider getMainWidget() {
@@ -77,8 +79,9 @@ class SmashApp extends StatelessWidget {
         IEL.delegate,
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
       ],
-      supportedLocales: SL.delegate.supportedLocales,
+      supportedLocales: SL.supportedLocales,
       // PRE GEN
       // localizationsDelegates: [
       //   AppLocalizations.delegate, // available after codegen
@@ -91,7 +94,7 @@ class SmashApp extends StatelessWidget {
       //   const Locale.fromSubtags(languageCode: 'zh'),
       // ],
       // END PRE GEN
-      navigatorKey: Catcher.navigatorKey,
+      // navigatorKey: Catcher.navigatorKey,
       title: Workspace.APP_NAME,
       //theme: Provider.of<ThemeState>(context).currentThemeData,
       theme: ThemeData(
@@ -106,7 +109,7 @@ class SmashApp extends StatelessWidget {
 }
 
 class WelcomeWidget extends StatefulWidget {
-  WelcomeWidget({Key key}) : super(key: key);
+  WelcomeWidget({Key? key}) : super(key: key);
 
   @override
   _WelcomeWidgetState createState() => _WelcomeWidgetState();
@@ -131,6 +134,7 @@ class _WelcomeWidgetState extends State<WelcomeWidget> {
 
   @override
   Widget build(BuildContext context) {
+    Localization.init(context);
     Widget widgetToLoad;
     if (_initFinished) {
       // load projects page
@@ -213,9 +217,9 @@ class _WelcomeWidgetState extends State<WelcomeWidget> {
   }
 }
 
-Future<String> handleFences(BuildContext context) async {
+Future<String?> handleFences(BuildContext context) async {
   try {
-    FenceMaster().readFences();
+    FenceMaster().readFences(context);
   } on Exception catch (e, s) {
     var msg = "Error while reading fences.";
     return logMsg(msg, e, s);
@@ -223,7 +227,7 @@ Future<String> handleFences(BuildContext context) async {
   return null;
 }
 
-Future<String> handleLayers(BuildContext context) async {
+Future<String?> handleLayers(BuildContext context) async {
   // init layer manager
   try {
     var layerManager = LayerManager();
@@ -248,7 +252,7 @@ Future<String> handleLayers(BuildContext context) async {
   return null;
 }
 
-Future<String> handleProjections(BuildContext context) async {
+Future<String?> handleProjections(BuildContext context) async {
   // read tags file
   try {
     List<String> projList = await GpPreferences().getProjections();
@@ -270,7 +274,7 @@ Future<String> handleProjections(BuildContext context) async {
   }
 }
 
-Future<String> handleTags(BuildContext context) async {
+Future<String?> handleTags(BuildContext context) async {
   // read tags file
   try {
     await TagsManager().readFileTags();
@@ -281,7 +285,7 @@ Future<String> handleTags(BuildContext context) async {
   return null;
 }
 
-Future<String> handlePreferences(BuildContext context) async {
+Future<String?> handlePreferences(BuildContext context) async {
   try {
     await GpPreferences().initialize();
 
@@ -299,11 +303,11 @@ Future<String> handlePreferences(BuildContext context) async {
   }
 }
 
-Future<String> handleWorkspace(BuildContext context) async {
+Future<String?> handleWorkspace(BuildContext context) async {
   try {
     await Workspace.init(doSafeMode: false);
     var directory = await Workspace.getConfigFolder();
-    bool init = SLogger().init(directory.path); // init logger
+    bool init = SLogger().init(directory.path) ?? false; // init logger
     if (init) SMLogger().setSubLogger(SLogger());
 
     // handle issues with Android 11 not taking the
@@ -315,7 +319,7 @@ Future<String> handleWorkspace(BuildContext context) async {
           GpPreferences().getBooleanSync("SHOWN_FS_MOVED_WARNING", false);
       if (!shownAlready) {
         await SmashDialogs.showWarningDialog(
-            context, SL().main_StorageIsInternalWarning);
+            context, SL.of(context).main_StorageIsInternalWarning);
         await GpPreferences().setBoolean("SHOWN_FS_MOVED_WARNING", true);
       }
     }
@@ -326,7 +330,7 @@ Future<String> handleWorkspace(BuildContext context) async {
   }
 }
 
-Future<String> handleLocationPermission(BuildContext context) async {
+Future<String?> handleLocationPermission(BuildContext context) async {
   try {
     if (!SmashPlatform.isDesktop()) {
       var status = await Permission.location.status;
@@ -347,11 +351,12 @@ Future<String> handleLocationPermission(BuildContext context) async {
   }
 }
 
-Future<String> handleStoragePermission(BuildContext context) async {
+Future<String?> handleStoragePermission(BuildContext context) async {
   if (!SmashPlatform.isDesktop()) {
     var storagePermission = await PermissionManager()
         .add(PERMISSIONS.STORAGE)
-        // .add(PERMISSIONS.MANAGEEXTSTORAGE) // TODO comment this for store release
+        .add(
+            PERMISSIONS.MANAGEEXTSTORAGE) // TODO comment this for store release
         .check(context);
     if (!storagePermission) {
       return SL.of(context).main_storagePermissionIsMandatoryToOpenSmash;
@@ -360,7 +365,7 @@ Future<String> handleStoragePermission(BuildContext context) async {
   return null;
 }
 
-String logMsg(String msg, Exception e, StackTrace s) {
+String logMsg(String msg, Exception e, StackTrace? s) {
   SMLogger().e(msg, e, s);
   if (s != null) {
     msg += "\n" + Trace.format(s);
@@ -377,7 +382,7 @@ class ProgressTile extends StatefulWidget {
   final iconData;
 
   final initMsg;
-  final Future<String> Function(BuildContext) processFunction;
+  final Future<String?> Function(BuildContext) processFunction;
 
   ProgressTile(this.iconData, this.initMsg, this.doneMsg, this.orderNotifier,
       this.order, this.processFunction);
@@ -389,7 +394,7 @@ class ProgressTile extends StatefulWidget {
 class _ProgressTileState extends State<ProgressTile> {
   bool isDone = false;
   bool isStarted = false;
-  String error;
+  String? error;
 
   @override
   void initState() {
@@ -422,7 +427,7 @@ class _ProgressTileState extends State<ProgressTile> {
 
   @override
   Widget build(BuildContext context) {
-    TextStyle textStyle;
+    TextStyle? textStyle;
     if (isStarted) {
       textStyle = TextStyle(
         color: SmashColors.mainSelection,
@@ -440,14 +445,14 @@ class _ProgressTileState extends State<ProgressTile> {
               isDone ? widget.doneMsg : widget.initMsg,
               style: textStyle,
             )
-          : FlatButton(
+          : TextButton(
               child: Text(
                 SL.of(context).main_anErrorOccurredTapToView,
                 style:
                     TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
               ),
               onPressed: () async {
-                await SmashDialogs.showErrorDialog(context, error);
+                await SmashDialogs.showErrorDialog(context, error!);
               },
             ),
     );

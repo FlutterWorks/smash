@@ -26,14 +26,14 @@ import 'package:smashlibs/smashlibs.dart';
 
 /// Log object dedicated to the list widget containing logs.
 class Log4ListWidget {
-  int id;
-  String name;
-  double width;
-  int startTime = 0;
-  int endTime = 0;
-  double lengthm = 0.0;
-  String color;
-  int isVisible;
+  int? id;
+  String? name;
+  double? width;
+  int? startTime = 0;
+  int? endTime = 0;
+  double? lengthm = 0.0;
+  String? color;
+  int? isVisible;
 }
 
 /// [QueryObjectBuilder] to allow easy extraction from the db.
@@ -66,8 +66,9 @@ class Log4ListWidgetBuilder extends QueryObjectBuilder<Log4ListWidget> {
 
   @override
   Map<String, dynamic> toMap(Log4ListWidget item) {
-    // TODO
-    return null;
+    var map = <String, dynamic>{};
+    // TODO unused
+    return map;
   }
 }
 
@@ -86,7 +87,7 @@ class LogListWidget extends StatefulWidget {
 class LogListWidgetState extends State<LogListWidget> with AfterLayoutMixin {
   List<dynamic> _logsList = [];
   bool _isLoading = true;
-  bool useGpsFilteredGenerally;
+  bool? useGpsFilteredGenerally;
 
   @override
   void afterFirstLayout(BuildContext context) {
@@ -110,7 +111,7 @@ class LogListWidgetState extends State<LogListWidget> with AfterLayoutMixin {
   Widget build(BuildContext context) {
     GpsState gpsState = Provider.of<GpsState>(context, listen: false);
     var projectState = Provider.of<ProjectState>(context, listen: false);
-    var db = projectState.projectDb;
+    var db = projectState.projectDb!;
     return WillPopScope(
       onWillPop: () async {
         Provider.of<ProjectState>(context, listen: false)
@@ -138,7 +139,7 @@ class LogListWidgetState extends State<LogListWidget> with AfterLayoutMixin {
                     var masterId;
                     _logsList.forEach((l) {
                       var lw = l as Log4ListWidget;
-                      if (lw.isVisible == 1 && lw.startTime < minTs) {
+                      if (lw.isVisible == 1 && lw.startTime! < minTs) {
                         masterId = lw.id;
                       }
                     });
@@ -146,7 +147,7 @@ class LogListWidgetState extends State<LogListWidget> with AfterLayoutMixin {
                     var mergeIds = <int>[];
                     for (Log4ListWidget log in _logsList) {
                       if (log.isVisible == 1 && log.id != masterId) {
-                        mergeIds.add(log.id);
+                        mergeIds.add(log.id!);
                       }
                     }
                     db.mergeGpslogs(masterId, mergeIds);
@@ -210,7 +211,7 @@ class LogInfo extends StatefulWidget {
 
   LogInfo(this.logItem, this.gpsState, this.db, this.reloadLogFunction,
       this.useGpsFilteredGenerally,
-      {Key key})
+      {Key? key})
       : super(key: key);
 
   @override
@@ -282,89 +283,111 @@ class _LogInfoState extends State<LogInfo> with AfterLayoutMixin {
     var padLeft = 5.0;
     var pad = 3.0;
 
-    List<Widget> actions = [];
-    List<Widget> secondaryActions = [];
+    var startActionPane = ActionPane(
+      extentRatio: 0.35,
+      dragDismissible: false,
+      motion: const ScrollMotion(),
+      dismissible: DismissiblePane(onDismissed: () {}),
+      children: [
+        // ZOOM TO
+        SlidableAction(
+            label: SL.of(context).logList_zoomTo, //'Zoom to'
+            foregroundColor: SmashColors.mainDecorations,
+            icon: MdiIcons.magnifyScan,
+            onPressed: (context) async {
+              SmashMapState mapState =
+                  Provider.of<SmashMapState>(context, listen: false);
+              var logDataPoints = db.getLogDataPoints(logItem.id!);
+              Envelope env = Envelope.empty();
+              logDataPoints.forEach((point) {
+                var lat = point.lat;
+                var lon = point.lon;
+                env.expandToInclude(lon, lat);
+              });
+              mapState.setBounds(env);
+              Navigator.of(context).pop();
+            }),
+        // PROPERTIES
+        SlidableAction(
+          onPressed: (context) async {
+            await Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => LogPropertiesWidget(logItem)));
+            setState(() {});
+          },
+          foregroundColor: SmashColors.mainDecorations,
+          icon: MdiIcons.palette,
+          label: SL.of(context).logList_properties, //'Properties'
+        ),
+        // PROFILE VIEW
+        SlidableAction(
+          label: SL.of(context).logList_profileView, //'Profile View'
+          foregroundColor: SmashColors.mainDecorations,
+          icon: MdiIcons.chartAreaspline,
+          onPressed: (context) async {
+            await Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => LogProfileView(logItem)));
+            setState(() {});
+          },
+        )
+      ],
+    );
 
-    actions.add(IconSlideAction(
-        caption: SL.of(context).logList_zoomTo, //'Zoom to'
-        color: SmashColors.mainDecorations,
-        icon: MdiIcons.magnifyScan,
-        onTap: () async {
-          SmashMapState mapState =
-              Provider.of<SmashMapState>(context, listen: false);
-          var logDataPoints = db.getLogDataPoints(logItem.id);
-          Envelope env = Envelope.empty();
-          logDataPoints.forEach((point) {
-            var lat = point.lat;
-            var lon = point.lon;
-            env.expandToInclude(lon, lat);
-          });
-          mapState.setBounds(env);
-          Navigator.of(context).pop();
-        }));
-    actions.add(IconSlideAction(
-      caption: SL.of(context).logList_properties, //'Properties'
-      color: SmashColors.mainDecorations,
-      icon: MdiIcons.palette,
-      onTap: () async {
-        await Navigator.push(
-            context,
-            MaterialPageRoute(
-                builder: (context) => LogPropertiesWidget(logItem)));
-        setState(() {});
-      },
-    ));
-    actions.add(IconSlideAction(
-      caption: SL.of(context).logList_profileView, //'Profile View'
-      color: SmashColors.mainDecorations,
-      icon: MdiIcons.chartAreaspline,
-      onTap: () async {
-        await Navigator.push(context,
-            MaterialPageRoute(builder: (context) => LogProfileView(logItem)));
-        setState(() {});
-      },
-    ));
-    secondaryActions.add(IconSlideAction(
-        caption: SL.of(context).logList_toGPX, //'To GPX'
-        color: SmashColors.mainDecorations,
-        icon: MdiIcons.mapMarker,
-        onTap: () async {
-          var exportsFolder = await Workspace.getExportsFolder();
-          try {
-            await GpxExporter.exportLog(db, logItem.id, exportsFolder.path);
-            SmashDialogs.showInfoDialog(
-                context,
-                SL
-                    .of(context)
-                    .logList_gpsSavedInExportFolder); //"GPX saved in export folder."
-          } on Exception catch (e, s) {
-            SMLogger().e("Error exporting log GPX", e, s);
-            SmashDialogs.showErrorDialog(
-                context,
-                SL
-                    .of(context)
-                    .logList_errorOccurredExportingLogGPX); //"An error occurred while exporting log to GPX."
-          }
-        }));
-    secondaryActions.add(IconSlideAction(
-        caption: SL.of(context).logList_delete, //'Delete'
-        color: SmashColors.mainDanger,
-        icon: MdiIcons.delete,
-        onTap: () async {
-          bool doDelete = await SmashDialogs.showConfirmDialog(
-              context,
-              SL.of(context).logList_DELETE, //"DELETE"
-              SL
-                  .of(context)
-                  .logList_areYouSureDeleteTheLog); //'Are you sure you want to delete the log?'
-          if (doDelete != null && doDelete) {
-            db.deleteGpslog(logItem.id);
-            widget.reloadLogFunction();
-          }
-        }));
+    var endActionPane = ActionPane(
+      extentRatio: 0.35,
+      dragDismissible: false,
+      motion: const ScrollMotion(),
+      dismissible: DismissiblePane(onDismissed: () {}),
+      children: [
+        // TO GPX
+        SlidableAction(
+            label: SL.of(context).logList_toGPX, //'To GPX'
+            foregroundColor: SmashColors.mainDecorations,
+            icon: MdiIcons.mapMarker,
+            onPressed: (context) async {
+              var exportsFolder = await Workspace.getExportsFolder();
+              try {
+                await GpxExporter.exportLog(
+                    db, logItem.id!, exportsFolder.path);
+                SmashDialogs.showInfoDialog(
+                    context,
+                    SL
+                        .of(context)
+                        .logList_gpsSavedInExportFolder); //"GPX saved in export folder."
+              } on Exception catch (e, s) {
+                SMLogger().e("Error exporting log GPX", e, s);
+                SmashDialogs.showErrorDialog(
+                    context,
+                    SL
+                        .of(context)
+                        .logList_errorOccurredExportingLogGPX); //"An error occurred while exporting log to GPX."
+              }
+            }),
+        // DELETE
+        SlidableAction(
+            label: SL.of(context).logList_delete, //'Delete'
+            foregroundColor: SmashColors.mainDanger,
+            icon: MdiIcons.delete,
+            onPressed: (context) async {
+              bool? doDelete = await SmashDialogs.showConfirmDialog(
+                  context,
+                  SL.of(context).logList_DELETE, //"DELETE"
+                  SL
+                      .of(context)
+                      .logList_areYouSureDeleteTheLog); //'Are you sure you want to delete the log?'
+              if (doDelete != null && doDelete) {
+                db.deleteGpslog(logItem.id!);
+                widget.reloadLogFunction();
+              }
+            })
+      ],
+    );
 
     var logColorObject =
-        EnhancedColorUtility.splitEnhancedColorString(logItem.color);
+        EnhancedColorUtility.splitEnhancedColorString(logItem.color!);
     var icon;
     if (logColorObject[1] != ColorTables.none) {
       icon = Icon(
@@ -379,10 +402,11 @@ class _LogInfoState extends State<LogInfo> with AfterLayoutMixin {
         size: SmashUI.MEDIUM_ICON_SIZE,
       );
     }
+
     return Slidable(
       key: Key("logview-${logItem.id}"),
-      actionPane: SlidableDrawerActionPane(),
-      actionExtentRatio: 0.25,
+      startActionPane: startActionPane,
+      endActionPane: endActionPane,
       child: ListTile(
         title: SmashUI.normalText('${logItem.name}',
             bold: true, textAlign: TextAlign.left),
@@ -431,34 +455,32 @@ class _LogInfoState extends State<LogInfo> with AfterLayoutMixin {
         trailing: Checkbox(
             value: logItem.isVisible == 1 ? true : false,
             onChanged: (isVisible) async {
-              logItem.isVisible = isVisible ? 1 : 0;
+              logItem.isVisible = isVisible! ? 1 : 0;
               db.updateGpsLogVisibility(isVisible, logItem.id);
               Provider.of<ProjectState>(context, listen: false)
                   .reloadProject(context);
               setState(() {});
             }),
       ),
-      actions: actions,
-      secondaryActions: secondaryActions,
     );
   }
 
   String _getTime(
       Log4ListWidget item, GpsState gpsState, GeopaparazziProjectDb db) {
-    var minutes = (item.endTime - item.startTime) / 1000 / 60;
+    var minutes = (item.endTime! - item.startTime!) / 1000 / 60;
     if (item.endTime == 0) {
       if (gpsState.isLogging && item.id == gpsState.currentLogId) {
-        minutes = (DateTime.now().millisecondsSinceEpoch - item.startTime) /
+        minutes = (DateTime.now().millisecondsSinceEpoch - item.startTime!) /
             1000 /
             60;
       } else {
         // needs to be fixed using the points. Do it and refresh.
-        var data = db.getLogDataPointsById(item.id);
+        var data = db.getLogDataPointsById(item.id!);
         if (data != null && data.length > 0) {
           var last = data.last;
           var ts = last.ts;
-          db.updateGpsLogEndts(item.id, ts);
-          minutes = (ts - item.startTime) / 1000 / 60;
+          db.updateGpsLogEndts(item.id!, ts!);
+          minutes = (ts - item.startTime!) / 1000 / 60;
         } else {
           minutes = 0;
         }
@@ -484,7 +506,7 @@ class _LogInfoState extends State<LogInfo> with AfterLayoutMixin {
       Log4ListWidget item, GpsState gpsState, GeopaparazziProjectDb db) {
     double up = 0;
     double down = 0;
-    var pointsList = db.getLogDataPoints(item.id);
+    var pointsList = db.getLogDataPoints(item.id!);
 
     double length = 0;
     List<int> removeIndexesList = [];
@@ -495,8 +517,8 @@ class _LogInfoState extends State<LogInfo> with AfterLayoutMixin {
       double distance;
       if (widget.useGpsFilteredGenerally && ldp1.filtered_lat != null) {
         distance = CoordinateUtilities.getDistance(
-            LatLng(ldp1.filtered_lat, ldp1.filtered_lon),
-            LatLng(ldp2.filtered_lat, ldp2.filtered_lon));
+            LatLng(ldp1.filtered_lat!, ldp1.filtered_lon!),
+            LatLng(ldp2.filtered_lat!, ldp2.filtered_lon!));
       } else {
         distance = CoordinateUtilities.getDistance(
             LatLng(ldp1.lat, ldp1.lon), LatLng(ldp2.lat, ldp2.lon));
@@ -504,8 +526,8 @@ class _LogInfoState extends State<LogInfo> with AfterLayoutMixin {
       length += distance;
 
       // start removing subsequent duplicates
-      double elev1 = pointsList[i].altim;
-      double elev2 = pointsList[i + 1].altim;
+      double elev1 = pointsList[i].altim!;
+      double elev2 = pointsList[i + 1].altim!;
       if (elev2 - elev1 == 0) {
         removeIndexesList.add(i);
       }
@@ -516,9 +538,9 @@ class _LogInfoState extends State<LogInfo> with AfterLayoutMixin {
     removeIndexesList = [];
     // then remove simmetric peaks
     for (int i = 0; i < pointsList.length - 2; i++) {
-      double elev1 = pointsList[i].altim;
-      double elev2 = pointsList[i + 1].altim;
-      double elev3 = pointsList[i + 2].altim;
+      double elev1 = pointsList[i].altim!;
+      double elev2 = pointsList[i + 1].altim!;
+      double elev3 = pointsList[i + 2].altim!;
       var delta1 = elev2 - elev1;
       var delta2 = elev3 - elev2;
       var deltaDiff = delta2 + delta1;
@@ -540,8 +562,8 @@ class _LogInfoState extends State<LogInfo> with AfterLayoutMixin {
     var maxThreshold = 10; // meters
     double deltaSum = 0;
     for (int i = 0; i < pointsList.length - 1; i++) {
-      double elev1 = pointsList[i].altim;
-      double elev2 = pointsList[i + 1].altim;
+      double elev1 = pointsList[i].altim!;
+      double elev2 = pointsList[i + 1].altim!;
 
       var delta = elev2 - elev1;
 

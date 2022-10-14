@@ -26,27 +26,31 @@ import 'package:smashlibs/com/hydrologis/flutterlibs/utils/logging.dart';
 import 'package:smashlibs/smashlibs.dart';
 
 class TileSource extends TiledRasterLayerSource {
-  String name;
-  String absolutePath;
-  String url;
-  int minZoom = DEFAULT_MINZOOM;
-  int maxZoom = DEFAULT_MAXZOOM;
-  String attribution;
-  LatLngBounds bounds;
+  String? name;
+  String? absolutePath;
+  String? url;
+  int minZoom = DEFAULT_MINZOOM_INT;
+  int maxZoom = DEFAULT_MAXZOOM_INT;
+  String? attribution;
+  LatLngBounds? bounds;
   List<String> subdomains = [];
   bool isVisible = true;
   bool isTms = false;
   bool isWms = false;
-  bool doGpkgAsOverlay;
+  bool? doGpkgAsOverlay;
   double opacityPercentage = 100;
-  List<int> rgbToHide;
+  List<int>? rgbToHide;
   int _srid = SmashPrj.EPSG3857_INT;
 
   bool canDoProperties = true;
 
-  Function errorTileCallback = (tile, exception) {
+  ErrorTileCallBack? errorTileCallback = (tile, exception) {
     // ignore tiles that can't load to avoid
-    SMLogger().e("Unable to load tile: ${tile.coordsKey}", exception, null);
+    if (exception is String) {
+      SMLogger().e(tile, null, null);
+    } else {
+      SMLogger().e("Unable to load tile: ${tile.coordsKey}", exception, null);
+    }
   };
   bool overrideTilesOnUrlChange = true;
 
@@ -54,8 +58,8 @@ class TileSource extends TiledRasterLayerSource {
     this.name,
     this.absolutePath,
     this.url,
-    this.minZoom,
-    this.maxZoom,
+    required this.minZoom,
+    required this.maxZoom,
     this.attribution,
     this.subdomains: const <String>[],
     this.isVisible: true,
@@ -90,7 +94,7 @@ class TileSource extends TiledRasterLayerSource {
     }
     _srid = map[LAYERSKEY_SRID] ?? _srid;
 
-    var subDomains = map['subdomains'] as String;
+    var subDomains = map['subdomains'] as String?;
     if (subDomains != null) {
       this.subdomains = subDomains.split(",");
     }
@@ -101,8 +105,8 @@ class TileSource extends TiledRasterLayerSource {
     this.name: "Open Street Map",
     this.url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
     this.attribution: "OpenStreetMap, ODbL",
-    this.minZoom: DEFAULT_MINZOOM,
-    this.maxZoom: DEFAULT_MAXZOOM,
+    this.minZoom: DEFAULT_MINZOOM_INT,
+    this.maxZoom: DEFAULT_MAXZOOM_INT,
     this.subdomains: const ['a', 'b', 'c'],
     this.isVisible: true,
     this.isTms: false,
@@ -114,8 +118,8 @@ class TileSource extends TiledRasterLayerSource {
     this.url: "https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png",
     this.attribution: "OpenStreetMap, ODbL",
     this.subdomains: const ['a', 'b', 'c'],
-    this.minZoom: DEFAULT_MINZOOM,
-    this.maxZoom: DEFAULT_MAXZOOM,
+    this.minZoom: DEFAULT_MINZOOM_INT,
+    this.maxZoom: DEFAULT_MAXZOOM_INT,
     this.isVisible: true,
     this.canDoProperties = true,
   });
@@ -125,8 +129,8 @@ class TileSource extends TiledRasterLayerSource {
     this.url: "https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png",
     this.attribution: "OpenStreetMap, ODbL",
     this.subdomains: const ['a', 'b'],
-    this.minZoom: DEFAULT_MINZOOM,
-    this.maxZoom: DEFAULT_MAXZOOM,
+    this.minZoom: DEFAULT_MINZOOM_INT,
+    this.maxZoom: DEFAULT_MAXZOOM_INT,
     this.isVisible: true,
     this.isTms: false,
     this.canDoProperties = true,
@@ -148,8 +152,8 @@ class TileSource extends TiledRasterLayerSource {
     this.name: "Opnvkarte Transport",
     this.url: "https://tile.memomaps.de/tilegen/{z}/{x}/{y}.png",
     this.attribution: "OpenStreetMap, ODbL",
-    this.minZoom: DEFAULT_MINZOOM,
-    this.maxZoom: DEFAULT_MAXZOOM,
+    this.minZoom: DEFAULT_MINZOOM_INT,
+    this.maxZoom: DEFAULT_MAXZOOM_INT,
     this.isVisible: true,
     this.isTms: false,
     this.canDoProperties = true,
@@ -159,8 +163,8 @@ class TileSource extends TiledRasterLayerSource {
     this.name: "Wikimedia Map",
     this.url: "https://maps.wikimedia.org/osm-intl/{z}/{x}/{y}.png",
     this.attribution: "OpenStreetMap contributors, under ODbL",
-    this.minZoom: DEFAULT_MINZOOM,
-    this.maxZoom: DEFAULT_MAXZOOM,
+    this.minZoom: DEFAULT_MINZOOM_INT,
+    this.maxZoom: DEFAULT_MAXZOOM_INT,
     this.isVisible: true,
     this.isTms: false,
     this.canDoProperties = true,
@@ -171,8 +175,8 @@ class TileSource extends TiledRasterLayerSource {
     this.url:
         "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
     this.attribution: "Esri",
-    this.minZoom: DEFAULT_MINZOOM,
-    this.maxZoom: DEFAULT_MAXZOOM,
+    this.minZoom: DEFAULT_MINZOOM_INT,
+    this.maxZoom: DEFAULT_MAXZOOM_INT,
     this.isVisible: true,
     this.isTms: true,
     this.canDoProperties = true,
@@ -183,7 +187,7 @@ class TileSource extends TiledRasterLayerSource {
     this.absolutePath = Workspace.makeAbsolute(filePath);
     this.attribution =
         "Map tiles by Mapsforge, Data by OpenStreetMap, under ODbL";
-    this.minZoom = DEFAULT_MINZOOM;
+    this.minZoom = DEFAULT_MINZOOM_INT;
     this.maxZoom = 22;
     this.isVisible = true;
     this.isTms = false;
@@ -216,7 +220,7 @@ class TileSource extends TiledRasterLayerSource {
 //      }
     }
 
-    String url = paramsMap["url"];
+    String? url = paramsMap["url"];
     if (url == null) {
       throw ArgumentError("The url for the service needs to be defined.");
     }
@@ -243,7 +247,7 @@ class TileSource extends TiledRasterLayerSource {
     this.name = FileUtilities.nameFromFile(filePath, false);
     this.absolutePath = Workspace.makeAbsolute(filePath);
     this.attribution = "";
-    this.minZoom = DEFAULT_MINZOOM;
+    this.minZoom = DEFAULT_MINZOOM_INT;
     this.maxZoom = 22;
     this.isVisible = true;
     this.isTms = true;
@@ -255,7 +259,7 @@ class TileSource extends TiledRasterLayerSource {
     this.name = tableName;
     this.absolutePath = Workspace.makeAbsolute(filePath);
     this.attribution = "";
-    this.minZoom = DEFAULT_MINZOOM;
+    this.minZoom = DEFAULT_MINZOOM_INT;
     this.maxZoom = 22;
     this.isVisible = true;
     this.isTms = true;
@@ -264,23 +268,23 @@ class TileSource extends TiledRasterLayerSource {
     getBounds();
   }
 
-  String getAbsolutePath() {
+  String? getAbsolutePath() {
     return absolutePath;
   }
 
-  String getUrl() {
+  String? getUrl() {
     return url;
   }
 
-  String getName() {
+  String? getName() {
     return name;
   }
 
-  String getUser() => null;
+  String? getUser() => null;
 
-  String getPassword() => null;
+  String? getPassword() => null;
 
-  String getAttribution() {
+  String? getAttribution() {
     return attribution;
   }
 
@@ -294,25 +298,25 @@ class TileSource extends TiledRasterLayerSource {
 
   IconData getIcon() => SmashIcons.iconTypeRaster;
 
-  Future<LatLngBounds> getBounds() async {
+  Future<LatLngBounds?> getBounds() async {
     if (bounds == null) {
       try {
         if (FileManager.isMapsforge(getAbsolutePath())) {
-          bounds = await getMapsforgeBounds(File(absolutePath));
+          bounds = await getMapsforgeBounds(File(absolutePath!));
         } else if (FileManager.isMbtiles(getAbsolutePath())) {
-          var prov = SmashMBTilesImageProvider(File(absolutePath));
+          var prov = SmashMBTilesImageProvider(File(absolutePath!));
           prov.open();
           bounds = prov.bounds;
           prov.dispose();
         } else if (FileManager.isGeopackage(getAbsolutePath())) {
           var ch = ConnectionsHandler();
-          var db = ch.open(absolutePath, tableName: name);
-          var tileEntry = db.tile(SqlName(name));
+          var db = ch.open(absolutePath!, tableName: name);
+          var tileEntry = db.tile(TableName(name!, schemaSupported: false));
           if (tileEntry != null) {
             var env = tileEntry.bounds;
             if (tileEntry.srid != Proj.EPSG4326_INT) {
               env = Proj.transformEnvelopeToWgs84(
-                  PROJ.Projection.get("EPSG:${tileEntry.srid}"), env);
+                  PROJ.Projection.get("EPSG:${tileEntry.srid}")!, env);
             }
 
             bounds = LatLngBounds(LatLng(env.getMinY(), env.getMinX()),
@@ -340,7 +344,7 @@ class TileSource extends TiledRasterLayerSource {
       // mapsforge
       double tileSize = 256;
       var mapsforgeTileProvider =
-          MapsforgeTileProvider(File(absolutePath), tileSize: tileSize);
+          MapsforgeTileProvider(File(absolutePath!), tileSize: tileSize);
       await mapsforgeTileProvider.open();
       return [
         TileLayerOptions(
@@ -357,7 +361,7 @@ class TileSource extends TiledRasterLayerSource {
         )
       ];
     } else if (FileManager.isMbtiles(getAbsolutePath())) {
-      var tileProvider = SmashMBTilesImageProvider(File(absolutePath));
+      var tileProvider = SmashMBTilesImageProvider(File(absolutePath!));
       tileProvider.open();
       // mbtiles
       return [
@@ -374,25 +378,25 @@ class TileSource extends TiledRasterLayerSource {
       ];
     } else if (FileManager.isGeopackage(getAbsolutePath())) {
       var ch = ConnectionsHandler();
-      var db = ch.open(absolutePath, tableName: name);
+      var db = ch.open(absolutePath!, tableName: name);
 
-      if (doGpkgAsOverlay != null && doGpkgAsOverlay) {
-        var tileEntry = db.tile(SqlName(name));
+      if (doGpkgAsOverlay != null && doGpkgAsOverlay!) {
+        var tileEntry = db.tile(TableName(name!, schemaSupported: false));
         var to4326function;
-        if (tileEntry.srid != Proj.EPSG4326_INT) {
+        if (tileEntry!.srid != Proj.EPSG4326_INT) {
           to4326function = (var envelope) {
             return Proj.transformEnvelopeToWgs84(
-                PROJ.Projection.get("EPSG:${tileEntry.srid}"), envelope);
+                PROJ.Projection.get("EPSG:${tileEntry.srid}")!, envelope);
           };
         }
         TilesFetcher fetcher = TilesFetcher(tileEntry);
         var lazyTiles =
             fetcher.getAllLazyTiles(db, to4326BoundsConverter: to4326function);
         var overlayImages = lazyTiles.map((lt) {
-          var minX = lt.tileBoundsLatLong.getMinX();
-          var minY = lt.tileBoundsLatLong.getMinY();
-          var maxX = lt.tileBoundsLatLong.getMaxX();
-          var maxY = lt.tileBoundsLatLong.getMaxY();
+          var minX = lt.tileBoundsLatLong!.getMinX();
+          var minY = lt.tileBoundsLatLong!.getMinY();
+          var maxX = lt.tileBoundsLatLong!.getMaxX();
+          var maxY = lt.tileBoundsLatLong!.getMaxY();
 
           return OverlayImage(
             bounds: LatLngBounds(LatLng(minY, minX), LatLng(maxY, maxX)),
@@ -404,7 +408,8 @@ class TileSource extends TiledRasterLayerSource {
           OverlayImageLayerOptions(overlayImages: overlayImages),
         ];
       } else {
-        var tileProvider = GeopackageTileImageProvider(db, SqlName(name));
+        var tileProvider = GeopackageTileImageProvider(
+            db, TableName(name!, schemaSupported: false));
         return [
           TileLayerOptions(
             tileProvider: tileProvider,
@@ -424,8 +429,8 @@ class TileSource extends TiledRasterLayerSource {
       if (isWms) {
         var tileLayerOptions = TileLayerOptions(
           wmsOptions: WMSTileLayerOptions(
-            baseUrl: url,
-            layers: [name],
+            baseUrl: url!,
+            layers: [name!],
           ),
           backgroundColor: Colors.transparent,
           opacity: opacityPercentage / 100.0,
@@ -459,9 +464,9 @@ class TileSource extends TiledRasterLayerSource {
   }
 
   String toJson() {
-    String savePath;
+    String? savePath;
     if (absolutePath != null) {
-      savePath = Workspace.makeRelative(absolutePath);
+      savePath = Workspace.makeRelative(absolutePath!);
     }
 
     var pathLine =
@@ -470,7 +475,7 @@ class TileSource extends TiledRasterLayerSource {
 
     var colorToHideLine = "";
     if (rgbToHide != null) {
-      var cJoin = rgbToHide.join(",");
+      var cJoin = rgbToHide!.join(",");
       colorToHideLine = "\"$LAYERSKEY_COLORTOHIDE\":\"$cJoin\",";
     }
     var doGeopkgMode = "";
@@ -500,7 +505,8 @@ class TileSource extends TiledRasterLayerSource {
 
   @override
   void disposeSource() {
-    ConnectionsHandler().close(getAbsolutePath(), tableName: getName());
+    ConnectionsHandler()
+        .close(getAbsolutePath() ?? getUrl()!, tableName: getName());
   }
 
   @override
@@ -547,7 +553,7 @@ class TileSourcePropertiesWidgetState
   bool _somethingChanged = false;
   bool useHideColor = false;
   bool isGeopackage = false;
-  bool doGpkgAsOverlay;
+  bool? doGpkgAsOverlay;
 
   TileSourcePropertiesWidgetState(this._source);
 
@@ -711,7 +717,7 @@ class TileSourcePropertiesWidgetState
                                 value: useHideColor,
                                 onChanged: (value) {
                                   setState(() {
-                                    useHideColor = value;
+                                    useHideColor = value!;
                                     _somethingChanged = true;
                                   });
                                 },

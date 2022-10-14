@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:dart_hydrologis_db/dart_hydrologis_db.dart';
 import 'package:dart_hydrologis_utils/dart_hydrologis_utils.dart';
+import 'package:dart_postgis/dart_postgis.dart';
 import 'package:flutter/material.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:smash/eu/hydrologis/smash/forms/form_sketch.dart';
@@ -70,7 +71,7 @@ class SmashFormHelper implements AFormhelper {
   }
 
   /// Take a picture for forms
-  Future<String> takePictureForForms(
+  Future<String?> takePictureForForms(
       BuildContext context, bool fromGallery, List<String> imageSplit) async {
     var gpsState = Provider.of<GpsState>(context, listen: false);
     dynamic lastGpsPosition = _position;
@@ -129,7 +130,7 @@ class SmashFormHelper implements AFormhelper {
         return value;
       } else {
         SmashDialogs.showWarningDialog(
-            context, SL().form_smash_cantSaveImageDb);
+            context, SL.of(context).form_smash_cantSaveImageDb);
         return null;
       }
     }
@@ -137,7 +138,7 @@ class SmashFormHelper implements AFormhelper {
   }
 
   @override
-  Future<String> takeSketchForForms(
+  Future<String?> takeSketchForForms(
       BuildContext context, List<String> imageSplit) async {
     DbImage dbImage = DbImage()
       ..timeStamp = DateTime.now().millisecondsSinceEpoch
@@ -175,7 +176,7 @@ class SmashFormHelper implements AFormhelper {
         return value;
       } else {
         SmashDialogs.showWarningDialog(
-            context, SL().form_smash_cantSaveImageDb);
+            context, SL.of(context).form_smash_cantSaveImageDb);
         return null;
       }
     }
@@ -205,7 +206,7 @@ class SmashFormHelper implements AFormhelper {
     List<Widget> thumbList = [];
     for (int i = 0; i < imageSplit.length; i++) {
       var id = int.parse(imageSplit[i]);
-      Widget thumbnail = projectState.projectDb.getThumbnail(id);
+      Widget? thumbnail = projectState.projectDb!.getThumbnail(id);
       Widget withBorder = Container(
         padding: SmashUI.defaultPadding(),
         child: thumbnail,
@@ -229,9 +230,9 @@ class SmashFormHelper implements AFormhelper {
       var iconName = TagsManager.getIcon4Section(_sectionMap);
       String iconColor = ColorExt.asHex(SmashColors.mainDecorationsDarker);
 
-      SmashPosition pos;
-      double lon;
-      double lat;
+      SmashPosition? pos;
+      late double lon;
+      late double lat;
       if (_position is SmashPosition) {
         pos = _position;
       } else {
@@ -259,11 +260,11 @@ class SmashFormHelper implements AFormhelper {
       next.marker = iconName;
       next.color = iconColor;
 
-      noteId = db.addNote(note);
+      noteId = db!.addNote(note)!;
     } else {
       noteId = _id;
       // update form for note
-      var note = db.getNoteById(_id);
+      var note = db!.getNoteById(_id);
       note.form = jsonForm;
       note.timeStamp = ts;
       db.updateNote(note);
@@ -279,20 +280,22 @@ class SmashDatabaseFormHelper implements AFormhelper {
   var _sectionName;
   var _db;
   List<Map<String, dynamic>> sectionMapList = [];
-  String _tableName;
+  late String _tableName;
 
   SmashDatabaseFormHelper(this._queryResult) {}
 
   @override
   Future<bool> init() async {
-    _db = _queryResult.dbs[0];
+    _db = _queryResult.dbs?[0];
 
-    _titleWidget = SmashUI.titleText(_queryResult.ids.first,
+    _titleWidget = SmashUI.titleText(_queryResult.ids!.first,
         color: SmashColors.mainBackground, bold: true);
 
-    _tableName = _queryResult.ids.first;
+    _tableName = _queryResult.ids!.first;
 
-    if (await _db.hasTable(SqlName(HM_FORMS_TABLE))) {
+    if (await _db.hasTable(TableName(HM_FORMS_TABLE,
+        schemaSupported:
+            _db is PostgisDb || _db is PostgresqlDb ? true : false))) {
       QueryResult result = await _db.select(
           "select $FORMS_FIELD from $HM_FORMS_TABLE where $FORMS_TABLENAME_FIELD='$_tableName'");
       if (result.length == 1) {
@@ -338,7 +341,7 @@ class SmashDatabaseFormHelper implements AFormhelper {
 
   @override
   int getId() {
-    var pk = _queryResult.primaryKeys.first;
+    var pk = _queryResult.primaryKeys!.first;
     var id = _queryResult.data.first[pk];
     return id;
   }
@@ -381,15 +384,20 @@ class SmashDatabaseFormHelper implements AFormhelper {
       });
     });
 
-    var pk = _queryResult.primaryKeys.first;
+    var pk = _queryResult.primaryKeys!.first;
     var id = _queryResult.data.first[pk];
 
     var where = "$pk=$id";
-    await _db.updateMap(SqlName(_tableName), data, where);
+    await _db.updateMap(
+        TableName(_tableName,
+            schemaSupported:
+                _db is PostgisDb || _db is PostgresqlDb ? true : false),
+        data,
+        where);
   }
 
   /// Take a picture for forms
-  Future<String> takePictureForForms(
+  Future<String?> takePictureForForms(
       BuildContext context, bool fromGallery, List<String> imageSplit) async {
     // DbImage dbImage = DbImage()
     //   ..timeStamp = DateTime.now().millisecondsSinceEpoch
@@ -466,7 +474,7 @@ class SmashDatabaseFormHelper implements AFormhelper {
     //   thumbList.add(withBorder);
     // }
     // return thumbList;
-    return null;
+    return [];
   }
 
   @override
@@ -474,6 +482,6 @@ class SmashDatabaseFormHelper implements AFormhelper {
       BuildContext context, List<String> imageSplit) {
     // // TODO: implement takeSketchForForms
     // throw UnimplementedError();
-    return null;
+    return Future.value(null);
   }
 }

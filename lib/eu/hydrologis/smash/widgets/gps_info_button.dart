@@ -136,7 +136,7 @@ class _GpsInfoButtonState extends State<GpsInfoButton> {
     return Consumer<GpsState>(builder: (context, gpsState, child) {
       Widget gpsInfo;
       if (gpsState.lastGpsPosition != null) {
-        var pos = gpsState.lastGpsPosition;
+        var pos = gpsState.lastGpsPosition!;
 
         Widget tableWidget;
 
@@ -299,7 +299,8 @@ class _GpsInfoButtonState extends State<GpsInfoButton> {
                 message: SL
                     .of(context)
                     .gpsInfoButton_copyLatitudeToClipboard, //"Copy latitude to clipboard."
-                child: RaisedButton(
+                child: ElevatedButton(
+                  style: SmashUI.defaultElevateButtonStyle(),
                   onPressed: () async {
                     await Clipboard.setData(ClipboardData(
                         text: pos.latitude.toStringAsFixed(
@@ -327,7 +328,8 @@ class _GpsInfoButtonState extends State<GpsInfoButton> {
                 message: SL
                     .of(context)
                     .gpsInfoButton_copyLongitudeToClipboard, //"Copy longitude to clipboard."
-                child: RaisedButton(
+                child: ElevatedButton(
+                  style: SmashUI.defaultElevateButtonStyle(),
                   onPressed: () async {
                     await Clipboard.setData(ClipboardData(
                         text: pos.longitude.toStringAsFixed(

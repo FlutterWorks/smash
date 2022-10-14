@@ -90,7 +90,7 @@ class NotesListWidgetState extends State<NotesListWidget>
                   itemCount: _notesList.length,
                   itemBuilder: (context, index) {
                     return NoteInfo(
-                        _notesList[index], db, projectState, loadNotes);
+                        _notesList[index], db!, projectState, loadNotes);
                   })),
     );
   }
@@ -110,8 +110,8 @@ class NoteInfo extends StatefulWidget {
 class _NoteInfoState extends State<NoteInfo> {
   @override
   Widget build(BuildContext context) {
-    List<Widget> actions = [];
-    List<Widget> secondaryActions = [];
+    List<Widget> startActions = [];
+    List<Widget> endActions = [];
     // dynamic dynNote = _notesList[index];
     dynamic dynNote = widget.note;
     int id;
@@ -123,9 +123,9 @@ class _NoteInfoState extends State<NoteInfo> {
     double lat;
     double lon;
     if (dynNote is Note) {
-      id = dynNote.id;
-      markerName = dynNote.noteExt.marker;
-      markerColor = dynNote.noteExt.color;
+      id = dynNote.id!;
+      markerName = dynNote.noteExt!.marker;
+      markerColor = dynNote.noteExt!.color;
       text = dynNote.text;
       ts = dynNote.timeStamp;
       lon = dynNote.lon;
@@ -133,7 +133,7 @@ class _NoteInfoState extends State<NoteInfo> {
       if (dynNote.hasForm()) {
         isForm = true;
         // text should get the label, if there is one
-        text = FormUtilities.getFormItemLabel(dynNote.form, text);
+        text = FormUtilities.getFormItemLabel(dynNote.form!, text);
       }
     } else {
       id = dynNote.id;
@@ -144,22 +144,22 @@ class _NoteInfoState extends State<NoteInfo> {
       lon = dynNote.lon;
       lat = dynNote.lat;
     }
-    actions.add(IconSlideAction(
-        caption: SL.of(context).noteList_zoomTo, //'Zoom to'
-        color: SmashColors.mainDecorations,
+    startActions.add(SlidableAction(
+        label: SL.of(context).noteList_zoomTo, //'Zoom to'
+        foregroundColor: SmashColors.mainDecorations,
         icon: MdiIcons.magnifyScan,
-        onTap: () async {
+        onPressed: (context) async {
           LatLng position = LatLng(lat, lon);
           Provider.of<SmashMapState>(context, listen: false).center =
               Coordinate(position.longitude, position.latitude);
           Navigator.of(context).pop();
         }));
     if (isForm) {
-      actions.add(IconSlideAction(
-        caption: SL.of(context).noteList_edit, //'Edit'
-        color: SmashColors.mainDecorations,
+      startActions.add(SlidableAction(
+        label: SL.of(context).noteList_edit, //'Edit'
+        foregroundColor: SmashColors.mainDecorations,
         icon: MdiIcons.pencil,
-        onTap: () async {
+        onPressed: (context) async {
           var sectionMap = jsonDecode(dynNote.form);
           var sectionName = sectionMap[ATTR_SECTIONNAME];
           SmashPosition sp = SmashPosition.fromCoords(dynNote.lon, dynNote.lat,
@@ -177,11 +177,11 @@ class _NoteInfoState extends State<NoteInfo> {
         },
       ));
     } else if (dynNote is Note) {
-      actions.add(IconSlideAction(
-        caption: SL.of(context).noteList_properties, //'Properties'
-        color: SmashColors.mainDecorations,
+      startActions.add(SlidableAction(
+        label: SL.of(context).noteList_properties, //'Properties'
+        foregroundColor: SmashColors.mainDecorations,
         icon: MdiIcons.palette,
-        onTap: () async {
+        onPressed: (context) async {
           await Navigator.push(
               context,
               MaterialPageRoute(
@@ -190,17 +190,19 @@ class _NoteInfoState extends State<NoteInfo> {
         },
       ));
     }
-    secondaryActions.add(IconSlideAction(
-        caption: SL.of(context).noteList_delete, //'Delete'
-        color: SmashColors.mainDanger,
+    endActions.add(SlidableAction(
+        label: SL.of(context).noteList_delete, //'Delete'
+        foregroundColor: SmashColors.mainDanger,
         icon: MdiIcons.delete,
-        onTap: () async {
+        onPressed: (context) async {
           bool doDelete = await SmashDialogs.showConfirmDialog(
-              context,
-              SL.of(context).noteList_DELETE, //"DELETE"
-              SL
-                  .of(context)
-                  .noteList_areYouSureDeleteNote); //'Are you sure you want to delete the note?'
+                  context,
+                  SL.of(context).noteList_DELETE, //"DELETE"
+                  SL
+                      .of(context)
+                      .noteList_areYouSureDeleteNote) //'Are you sure you want to delete the note?'
+              ??
+              false;
           if (doDelete) {
             if (dynNote is Note) {
               widget.db.deleteNote(id);
@@ -213,20 +215,30 @@ class _NoteInfoState extends State<NoteInfo> {
 
     return Slidable(
       key: ValueKey(id),
-      actionPane: SlidableDrawerActionPane(),
-      actionExtentRatio: 0.25,
+      startActionPane: ActionPane(
+        extentRatio: 0.35,
+        dragDismissible: false,
+        motion: const ScrollMotion(),
+        dismissible: DismissiblePane(onDismissed: () {}),
+        children: startActions,
+      ),
+      endActionPane: ActionPane(
+        extentRatio: 0.35,
+        dragDismissible: false,
+        motion: const ScrollMotion(),
+        dismissible: DismissiblePane(onDismissed: () {}),
+        children: endActions,
+      ),
       child: ListTile(
         title: SmashUI.normalText('$text', bold: true),
         subtitle: Text(
             '${TimeUtilities.ISO8601_TS_FORMATTER.format(DateTime.fromMillisecondsSinceEpoch(ts))}'),
         leading: Icon(
-          getSmashIcon(markerName) ?? MdiIcons.mapMarker,
+          getSmashIcon(markerName),
           color: ColorExt(markerColor),
           size: SmashUI.MEDIUM_ICON_SIZE,
         ),
       ),
-      actions: actions,
-      secondaryActions: secondaryActions,
     );
   }
 }

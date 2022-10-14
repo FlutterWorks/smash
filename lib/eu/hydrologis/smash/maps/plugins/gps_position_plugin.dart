@@ -21,7 +21,7 @@ import 'package:smash/eu/hydrologis/smash/models/gps_state.dart';
 class GpsPositionPlugin implements MapPlugin {
   @override
   Widget createLayer(
-      LayerOptions options, MapState mapState, Stream<Null> stream) {
+      LayerOptions options, MapState mapState, Stream<void> stream) {
     if (options is GpsPositionPluginOption) {
       return GpsPositionLayer(options, mapState, stream);
     }
@@ -37,7 +37,7 @@ class GpsPositionPlugin implements MapPlugin {
 class GpsPositionPluginOption extends LayerOptions {
   Color markerColor;
   Color markerColorStale;
-  Color markerColorLogging;
+  Color? markerColorLogging;
   double markerSize;
 
   GpsPositionPluginOption({
@@ -53,7 +53,7 @@ class GpsPositionPluginOption extends LayerOptions {
 class GpsPositionLayer extends StatelessWidget {
   final GpsPositionPluginOption gpsPositionLayerOpts;
   final MapState map;
-  final Stream<Null> stream;
+  final Stream<void> stream;
 
   GpsPositionLayer(this.gpsPositionLayerOpts, this.map, this.stream);
 
@@ -140,12 +140,12 @@ class CurrentGpsPositionPainter extends CustomPainter {
       var radius = gpsPositionLayerOpts.markerSize / 2;
 
       CustomPoint mainPosPixel = map.project(mainPosLL);
-      double mainCenterX = mainPosPixel.x - pixelOrigin.x;
-      double mainCenterY = (mainPosPixel.y - pixelOrigin.y);
+      double mainCenterX = mainPosPixel.x - pixelOrigin.x.toDouble();
+      double mainCenterY = (mainPosPixel.y - pixelOrigin.y.toDouble());
 
       CustomPoint secPosPixel = map.project(secPosLL);
-      double secCenterX = secPosPixel.x - pixelOrigin.x;
-      double secCenterY = (secPosPixel.y - pixelOrigin.y);
+      double secCenterX = secPosPixel.x - pixelOrigin.x.toDouble();
+      double secCenterY = (secPosPixel.y - pixelOrigin.y.toDouble());
 
       var secPaint = Paint()
         ..color = Colors.red.withAlpha(100)
@@ -162,7 +162,7 @@ class CurrentGpsPositionPainter extends CustomPainter {
         var radiusLL =
             calculateEndingGlobalCoordinates(mainPosLL, 90, accuracy);
         CustomPoint tmpPixel = map.project(radiusLL);
-        double tmpX = tmpPixel.x - pixelOrigin.x;
+        double tmpX = tmpPixel.x - pixelOrigin.x.toDouble();
         double accuracyRadius = (mainCenterX - tmpX).abs();
 
         canvas.drawCircle(

@@ -10,6 +10,7 @@ import 'dart:ui';
 import 'package:after_layout/after_layout.dart';
 import 'package:dart_hydrologis_db/dart_hydrologis_db.dart';
 import 'package:dart_jts/dart_jts.dart' as JTS;
+import 'package:dart_postgis/dart_postgis.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart' as FM;
 import 'package:flutter_map/plugin_api.dart';
@@ -25,7 +26,7 @@ class FeatureAttributesViewer extends StatefulWidget {
   final EditableQueryResult features;
   final bool readOnly;
 
-  FeatureAttributesViewer(this.features, {this.readOnly = true, Key key})
+  FeatureAttributesViewer(this.features, {this.readOnly = true, Key? key})
       : super(key: key);
 
   @override
@@ -36,11 +37,11 @@ class FeatureAttributesViewer extends StatefulWidget {
 class _FeatureAttributesViewerState extends State<FeatureAttributesViewer>
     with AfterLayoutMixin {
   int _index = 0;
-  int _total;
+  late int _total;
   MapController _mapController = MapController();
   var _baseLayer;
   bool _loading = true;
-  JTS.Geometry _geometry;
+  late JTS.Geometry _geometry;
   var _geomCols = {};
 
   @override
@@ -55,11 +56,13 @@ class _FeatureAttributesViewerState extends State<FeatureAttributesViewer>
     var latLngBounds = LatLngBounds(LatLng(env.getMinY(), env.getMinX()),
         LatLng(env.getMaxY(), env.getMaxX()));
 
-    for (var i = 0; i < f.ids.length; i++) {
-      var db = f.dbs[i];
-      var tableName = f.ids[i];
-      var geometryColumn =
-          await db.getGeometryColumnsForTable(SqlName(tableName));
+    for (var i = 0; i < f.ids!.length; i++) {
+      var db = f.dbs![i];
+      var tableName = f.ids![i];
+      var geometryColumn = await db.getGeometryColumnsForTable(TableName(
+          tableName,
+          schemaSupported:
+              db is PostgisDb || db is PostgresqlDb ? true : false));
       if (geometryColumn != null) {
         _geomCols[tableName] = geometryColumn;
       }
@@ -77,7 +80,7 @@ class _FeatureAttributesViewerState extends State<FeatureAttributesViewer>
     var activeBaseLayers = LayerManager().getLayerSources(onlyActive: true);
     if (activeBaseLayers.isNotEmpty) {
       var baseLayers = await activeBaseLayers[0].toLayers(context);
-      if (baseLayers.isNotEmpty) {
+      if (baseLayers!.isNotEmpty) {
         for (var baseLayer in baseLayers) {
           if (baseLayer is TileLayerOptions) {
             _baseLayer = baseLayer;
@@ -107,13 +110,13 @@ class _FeatureAttributesViewerState extends State<FeatureAttributesViewer>
     _geometry = f.geoms[_index];
 
     Map<String, dynamic> data = f.data[_index];
-    Map<String, String> typesMap;
+    Map<String, String>? typesMap;
     var primaryKey;
     var db;
-    if (f.editable[_index]) {
-      typesMap = f.fieldAndTypemap[_index];
-      primaryKey = f.primaryKeys[_index];
-      db = f.dbs[_index];
+    if (f.editable![_index]) {
+      typesMap = f.fieldAndTypemap![_index];
+      primaryKey = f.primaryKeys![_index];
+      db = f.dbs![_index];
     }
 
     var centroid = _geometry.getCentroid().getCoordinate();
@@ -128,7 +131,7 @@ class _FeatureAttributesViewerState extends State<FeatureAttributesViewer>
           new Marker(
             width: size,
             height: size,
-            point: LatLng(centroid.y, centroid.x),
+            point: LatLng(centroid!.y, centroid.x),
             builder: (ctx) => new Stack(
               children: <Widget>[
                 Center(
@@ -195,7 +198,7 @@ class _FeatureAttributesViewerState extends State<FeatureAttributesViewer>
       layers.add(polyLayer);
     }
 
-    var tableName = widget.features.ids[_index];
+    var tableName = widget.features.ids![_index];
     return Scaffold(
       appBar: AppBar(
         title: Text(tableName),
@@ -259,7 +262,7 @@ class _FeatureAttributesViewerState extends State<FeatureAttributesViewer>
                       height: double.infinity,
                       child: FlutterMap(
                         options: new MapOptions(
-                          center: LatLng(centroid.y, centroid.x),
+                          center: LatLng(centroid!.y, centroid.x),
                           zoom: 15,
                           minZoom: 7,
                           maxZoom: 19,
@@ -294,7 +297,7 @@ class _FeatureAttributesViewerState extends State<FeatureAttributesViewer>
                       width: double.infinity,
                       child: FlutterMap(
                         options: new MapOptions(
-                          center: LatLng(centroid.y, centroid.x),
+                          center: LatLng(centroid!.y, centroid.x),
                           zoom: 15,
                           minZoom: 7,
                           maxZoom: 19,
@@ -310,7 +313,7 @@ class _FeatureAttributesViewerState extends State<FeatureAttributesViewer>
                         child: SingleChildScrollView(
                           scrollDirection: Axis.horizontal,
                           child: getDataTable(
-                              tableName, data, primaryKey, db, typesMap),
+                              tableName, data, primaryKey, db, typesMap!),
                         ),
                       ),
                     ),
@@ -320,7 +323,7 @@ class _FeatureAttributesViewerState extends State<FeatureAttributesViewer>
   }
 
   Widget getDataTable(String tablename, Map<String, dynamic> data,
-      String primaryKey, dynamic db, Map<String, String> typesMap) {
+      String? primaryKey, dynamic db, Map<String, String>? typesMap) {
     List<DataRow> rows = [];
 
     data.forEach((key, value) {
@@ -350,8 +353,8 @@ class _FeatureAttributesViewerState extends State<FeatureAttributesViewer>
                   data[key] = int.parse(result);
                 } else if (value is double) {
                   data[key] = double.parse(result);
-                } else {
-                  var typeString = typesMap[key].toUpperCase();
+                } else if (typesMap != null) {
+                  var typeString = typesMap[key]!.toUpperCase();
 
                   if (SqliteTypes.isString(typeString)) {
                     data[key] = result;
@@ -371,7 +374,13 @@ class _FeatureAttributesViewerState extends State<FeatureAttributesViewer>
                   key: data[key],
                 };
                 var where = "$primaryKey=$pkValue";
-                await db.updateMap(SqlName(tablename), map, where);
+                await db.updateMap(
+                    TableName(tablename,
+                        schemaSupported: db is PostgisDb || db is PostgresqlDb
+                            ? true
+                            : false),
+                    map,
+                    where);
                 setState(() {});
               }
             }
@@ -389,7 +398,7 @@ class _FeatureAttributesViewerState extends State<FeatureAttributesViewer>
       bool doRound = false;
       if (geometryColumn.srid != SmashPrj.EPSG4326_INT) {
         var to = SmashPrj.fromSrid(geometryColumn.srid);
-        SmashPrj.transformGeometry(SmashPrj.EPSG4326, to, checkGeom);
+        SmashPrj.transformGeometry(SmashPrj.EPSG4326, to!, checkGeom);
         doRound = true;
       }
 

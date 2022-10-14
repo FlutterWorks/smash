@@ -5,10 +5,11 @@
  */
 
 import 'package:flutter/material.dart';
-import 'package:package_info/package_info.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:smash/generated/l10n.dart';
 import 'package:smashlibs/smashlibs.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:url_launcher/url_launcher_string.dart';
 
 class AboutPage extends StatefulWidget {
   @override
@@ -18,8 +19,8 @@ class AboutPage extends StatefulWidget {
 }
 
 class AboutPageState extends State<AboutPage> {
-  String _appName;
-  String _version;
+  String? _appName;
+  String? _version;
 
   Future<void> getVersion() async {
     PackageInfo packageInfo = await PackageInfo.fromPlatform();
@@ -41,9 +42,9 @@ class AboutPageState extends State<AboutPage> {
 
   @override
   Widget build(BuildContext context) {
-    String version = _version;
+    String? version = _version;
 
-    return _appName == null
+    return _version == null
         ? SmashCircularProgress(
             label: SL
                 .of(context)
@@ -51,14 +52,14 @@ class AboutPageState extends State<AboutPage> {
           )
         : Scaffold(
             appBar: new AppBar(
-              title: Text(SL.of(context).about_ABOUT + _appName), //"ABOUT "
+              title: Text(SL.of(context).about_ABOUT + _appName!), //"ABOUT "
             ),
             body: Container(
               padding: SmashUI.defaultPadding(),
               child: ListView(
                 children: <Widget>[
                   ListTile(
-                    title: Text(_appName),
+                    title: Text(_appName!),
                     subtitle: Text(SL
                         .of(context)
                         .about_smartMobileAppForSurveyor), //"Smart Mobile App for Surveyor's Happiness"
@@ -67,11 +68,11 @@ class AboutPageState extends State<AboutPage> {
                     title: Text(SL
                         .of(context)
                         .about_applicationVersion), //"Application version"
-                    subtitle: Text(version),
+                    subtitle: Text(version!),
                   ),
                   ListTile(
                     title: Text(SL.of(context).about_license), //"License"
-                    subtitle: Text(_appName +
+                    subtitle: Text(_appName! +
                         SL
                             .of(context)
                             .about_isAvailableUnderGPL3), //" is available under the General Public License, version 3."
@@ -83,8 +84,10 @@ class AboutPageState extends State<AboutPage> {
                         .of(context)
                         .about_tapHereToVisitRepo), //"Tap here to visit the source code repository"
                     onTap: () async {
-                      if (await canLaunch("https://github.com/moovida/smash")) {
-                        await launch("https://github.com/moovida/smash");
+                      if (await canLaunchUrlString(
+                          "https://github.com/moovida/smash")) {
+                        await launchUrlString(
+                            "https://github.com/moovida/smash");
                       }
                     },
                   ),
@@ -96,8 +99,9 @@ class AboutPageState extends State<AboutPage> {
                         .of(context)
                         .about_copyright2020HydroloGIS), //"Copyright 2020, HydroloGIS S.r.l. -  some rights reserved. Tap to visit."
                     onTap: () async {
-                      if (await canLaunch("http://www.hydrologis.com")) {
-                        await launch("http://www.hydrologis.com");
+                      if (await canLaunchUrlString(
+                          "http://www.hydrologis.com")) {
+                        await launchUrlString("http://www.hydrologis.com");
                       }
                     },
                   ),
@@ -115,9 +119,9 @@ class AboutPageState extends State<AboutPage> {
                         .of(context)
                         .about_tapHereToSeePrivacyPolicy), //"Tap here to see the privacy policy that covers user and location data."
                     onTap: () async {
-                      if (await canLaunch(
+                      if (await canLaunchUrlString(
                           "https://www.hydrologis.com/geo_privacy_policy")) {
-                        await launch(
+                        await launchUrlString(
                             "https://www.hydrologis.com/geo_privacy_policy");
                       }
                     },

@@ -7,6 +7,7 @@ import 'package:badges/badges.dart';
 import 'package:dart_hydrologis_db/dart_hydrologis_db.dart';
 import 'package:dart_hydrologis_utils/dart_hydrologis_utils.dart'
     hide TextStyle;
+import 'package:dart_postgis/dart_postgis.dart';
 import 'package:flutter/material.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
@@ -30,7 +31,7 @@ import 'package:smashlibs/smashlibs.dart';
 
 class BottomToolsBar extends StatefulWidget {
   final _iconSize;
-  BottomToolsBar(this._iconSize, {Key key}) : super(key: key);
+  BottomToolsBar(this._iconSize, {Key? key}) : super(key: key);
 
   @override
   _BottomToolsBarState createState() => _BottomToolsBarState();
@@ -173,7 +174,7 @@ class _BottomToolsBarState extends State<BottomToolsBar> {
           GeometryEditManager().stopEditing();
 
           // reload layer geoms
-          await reloadDbLayers(editableGeometry.db, editableGeometry.table);
+          await reloadDbLayers(editableGeometry!.db, editableGeometry.table!);
         },
       ),
     );
@@ -279,8 +280,8 @@ class _BottomToolsBarState extends State<BottomToolsBar> {
           ),
         ),
         onLongPress: () async {
-          var t = geomEditState.editableGeometry.table;
-          var db = geomEditState.editableGeometry.db;
+          var t = geomEditState.editableGeometry!.table!;
+          var db = geomEditState.editableGeometry!.db;
           bool hasDeleted = await GeometryEditManager()
               .deleteCurrentSelection(context, geomEditState);
           if (hasDeleted) {
@@ -306,7 +307,7 @@ class _BottomToolsBarState extends State<BottomToolsBar> {
 
     SmashMapBuilder mapBuilder =
         Provider.of<SmashMapBuilder>(context, listen: false);
-    var layers = await LayerManager().loadLayers(mapBuilder.context);
+    var layers = await LayerManager().loadLayers(mapBuilder.context!);
     mapBuilder.oneShotUpdateLayers = layers;
     mapBuilder.reBuild();
   }
@@ -329,12 +330,14 @@ class _BottomToolsBarState extends State<BottomToolsBar> {
           ),
         ),
         onTap: () async {
-          var editableGeometry = geometryEditorState.editableGeometry;
+          var editableGeometry = geometryEditorState.editableGeometry!;
           var id = editableGeometry.id;
           if (id != null) {
             var table = editableGeometry.table;
             var db = editableGeometry.db;
-            var tableName = SqlName(table);
+            var tableName = TableName(table!,
+                schemaSupported:
+                    db is PostgisDb || db is PostgresqlDb ? true : false);
             var key = await db.getPrimaryKey(tableName);
             var geometryColumn = await db.getGeometryColumnsForTable(tableName);
             var tableColumns = await db.getTableColumns(tableName);
@@ -352,13 +355,13 @@ class _BottomToolsBarState extends State<BottomToolsBar> {
               totalQueryResult.primaryKeys = [];
               totalQueryResult.dbs = [];
               tableData.geoms.forEach((g) {
-                totalQueryResult.ids.add(table);
-                totalQueryResult.primaryKeys.add(key);
-                totalQueryResult.dbs.add(db);
-                totalQueryResult.fieldAndTypemap.add(typesMap);
-                totalQueryResult.editable.add(true);
+                totalQueryResult.ids?.add(table);
+                totalQueryResult.primaryKeys?.add(key);
+                totalQueryResult.dbs?.add(db);
+                totalQueryResult.fieldAndTypemap?.add(typesMap);
+                totalQueryResult.editable?.add(true);
                 if (geometryColumn.srid != SmashPrj.EPSG4326_INT) {
-                  var from = SmashPrj.fromSrid(geometryColumn.srid);
+                  var from = SmashPrj.fromSrid(geometryColumn.srid)!;
                   SmashPrj.transformGeometryToWgs84(from, g);
                 }
                 totalQueryResult.geoms.add(g);
@@ -402,7 +405,7 @@ class _BottomToolsBarState extends State<BottomToolsBar> {
 class FeatureQueryButton extends StatefulWidget {
   final _iconSize;
 
-  FeatureQueryButton(this._iconSize, {Key key}) : super(key: key);
+  FeatureQueryButton(this._iconSize, {Key? key}) : super(key: key);
 
   @override
   _FeatureQueryButtonState createState() => _FeatureQueryButtonState();
@@ -444,7 +447,7 @@ class _FeatureQueryButtonState extends State<FeatureQueryButton> {
 class RulerButton extends StatelessWidget {
   final _iconSize;
 
-  RulerButton(this._iconSize, {Key key}) : super(key: key);
+  RulerButton(this._iconSize, {Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -467,7 +470,7 @@ class RulerButton extends StatelessWidget {
           position: BadgePosition.topStart(
               top: -_iconSize / 2, start: 0.1 * _iconSize),
           badgeContent: Text(
-            StringUtilities.formatMeters(rulerState.lengthMeters),
+            StringUtilities.formatMeters(rulerState.lengthMeters!),
             style: TextStyle(color: Colors.white),
           ),
           child: w,
@@ -495,7 +498,7 @@ class RulerButton extends StatelessWidget {
 class FenceButton extends StatelessWidget {
   final _iconSize;
 
-  FenceButton(this._iconSize, {Key key}) : super(key: key);
+  FenceButton(this._iconSize, {Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -519,11 +522,11 @@ class FenceButton extends StatelessWidget {
         onTap: () async {
           var mapState = Provider.of<SmashMapState>(context, listen: false);
 
-          Fence tmpfence = Fence()
+          Fence tmpfence = Fence(context)
             ..lat = mapState.center.y
             ..lon = mapState.center.x;
 
-          Fence newFence = await FenceMaster()
+          Fence? newFence = await FenceMaster()
               .showFencePropertiesDialog(context, tmpfence, false);
           if (newFence != null) {
             FenceMaster().addFence(newFence);
@@ -553,7 +556,7 @@ class FenceButton extends StatelessWidget {
 class GeomEditorButton extends StatefulWidget {
   final _iconSize;
 
-  GeomEditorButton(this._iconSize, {Key key}) : super(key: key);
+  GeomEditorButton(this._iconSize, {Key? key}) : super(key: key);
 
   @override
   _GeomEditorButtonState createState() => _GeomEditorButtonState();

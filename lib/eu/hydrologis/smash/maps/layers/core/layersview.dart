@@ -20,6 +20,7 @@ import 'package:smash/eu/hydrologis/smash/maps/layers/core/layermanager.dart';
 import 'package:smash/eu/hydrologis/smash/maps/layers/core/layersource.dart';
 import 'package:smash/eu/hydrologis/smash/maps/layers/core/onlinesourcespage.dart';
 import 'package:smash/eu/hydrologis/smash/maps/layers/core/remotedbpage.dart';
+import 'package:smash/eu/hydrologis/smash/maps/layers/types/geocaching.dart';
 import 'package:smash/eu/hydrologis/smash/maps/layers/types/geoimage.dart';
 import 'package:smash/eu/hydrologis/smash/maps/layers/types/geopackage.dart';
 import 'package:smash/eu/hydrologis/smash/maps/layers/types/gpx.dart';
@@ -162,21 +163,21 @@ class LayersPageState extends State<LayersPage> {
     return fixedList.map((idx) {
       var layerSourceItem = _layersList[idx];
       var srid = layerSourceItem.getSrid();
-      bool prjSupported;
+      bool? prjSupported;
       if (srid != null) {
         var projection = SmashPrj.fromSrid(srid);
         prjSupported = projection != null;
       }
-      List<Widget> actions = [];
-      List<Widget> secondaryActions = [];
+      List<Widget> startActions = [];
+      List<Widget> endActions = [];
 
       if (layerSourceItem.isZoomable()) {
-        actions.add(IconSlideAction(
-            caption: SL.of(context).layersView_zoomTo, //'Zoom to'
-            color: SmashColors.mainDecorations,
+        startActions.add(SlidableAction(
+            label: SL.of(context).layersView_zoomTo, //'Zoom to'
+            foregroundColor: SmashColors.mainDecorations,
             icon: MdiIcons.magnifyScan,
-            onTap: () async {
-              LatLngBounds bb = await layerSourceItem.getBounds();
+            onPressed: (context) async {
+              LatLngBounds? bb = await layerSourceItem.getBounds();
               if (bb != null) {
                 setLayersOnChange(_layersList);
 
@@ -189,28 +190,27 @@ class LayersPageState extends State<LayersPage> {
             }));
       }
       if (layerSourceItem.hasProperties()) {
-        actions.add(IconSlideAction(
-            caption: SL.of(context).layersView_properties, //'Properties'
-            color: SmashColors.mainDecorations,
+        startActions.add(SlidableAction(
+            label: SL.of(context).layersView_properties, //'Properties'
+            foregroundColor: SmashColors.mainDecorations,
             icon: MdiIcons.palette,
-            onTap: () async {
+            onPressed: (context) async {
               var propertiesWidget = layerSourceItem.getPropertiesWidget();
-              String newSldString = await Navigator.push(context,
+              String? newSldString = await Navigator.push(context,
                   MaterialPageRoute(builder: (context) => propertiesWidget));
               if (newSldString != null) {
                 if (layerSourceItem is SldLayerSource) {
-                  await (layerSourceItem as SldLayerSource)
-                      .updateStyle(newSldString);
+                  (layerSourceItem as SldLayerSource).updateStyle(newSldString);
                 }
               }
               _somethingChanged = true;
             }));
       }
-      secondaryActions.add(IconSlideAction(
-          caption: SL.of(context).layersView_delete, //'Delete'
-          color: SmashColors.mainDanger,
+      endActions.add(SlidableAction(
+          label: SL.of(context).layersView_delete, //'Delete'
+          foregroundColor: SmashColors.mainDanger,
           icon: MdiIcons.delete,
-          onTap: () {
+          onPressed: (context) {
             if (layerSourceItem.isActive()) {
               _somethingChanged = true;
             }
@@ -222,8 +222,20 @@ class LayersPageState extends State<LayersPage> {
       var key = "$idx-${layerSourceItem.getName()}";
       return Slidable(
         key: Key(key),
-        actionPane: SlidableDrawerActionPane(),
-        actionExtentRatio: 0.25,
+        startActionPane: ActionPane(
+          extentRatio: 0.35,
+          dragDismissible: false,
+          motion: const ScrollMotion(),
+          dismissible: DismissiblePane(onDismissed: () {}),
+          children: startActions,
+        ),
+        endActionPane: ActionPane(
+          extentRatio: 0.35,
+          dragDismissible: false,
+          motion: const ScrollMotion(),
+          dismissible: DismissiblePane(onDismissed: () {}),
+          children: endActions,
+        ),
         child: ListTile(
           title: SingleChildScrollView(
             child: Text('${layerSourceItem.getName()}'),
@@ -260,7 +272,7 @@ class LayersPageState extends State<LayersPage> {
                     ),
           leading: Icon(
             SmashIcons.forPath(
-                layerSourceItem.getAbsolutePath() ?? layerSourceItem.getUrl()),
+                layerSourceItem.getAbsolutePath() ?? layerSourceItem.getUrl()!),
             color: SmashColors.mainDecorations,
             size: SmashUI.MEDIUM_ICON_SIZE,
           ),
@@ -270,7 +282,7 @@ class LayersPageState extends State<LayersPage> {
             child: Checkbox(
                 value: layerSourceItem.isActive(),
                 onChanged: (isVisible) async {
-                  layerSourceItem.setActive(isVisible);
+                  layerSourceItem.setActive(isVisible!);
                   _somethingChanged = true;
                   if (isVisible &&
                       layerSourceItem is LoadableLayerSource &&
@@ -285,8 +297,6 @@ class LayersPageState extends State<LayersPage> {
                 }),
           ),
         ),
-        actions: actions,
-        secondaryActions: secondaryActions,
       );
     }).toList();
   }
@@ -295,7 +305,7 @@ class LayersPageState extends State<LayersPage> {
     if (prjSupported == null || !prjSupported) {
       bool goToPrjPage = true;
       if (prjSupported == null && srid == null) {
-        int epsg = await SmashDialogs.showEpsgInputDialog(context);
+        int? epsg = await SmashDialogs.showEpsgInputDialog(context);
         if (epsg != null) {
           srid = epsg;
         } else {
@@ -349,6 +359,13 @@ Future<bool> loadLayer(BuildContext context, String filePath) async {
       LayerManager().addLayerSource(gpxLayer);
       return true;
     }
+  } else if (FileManager.isGeocaching(filePath)) {
+    GeocachingSource geocachingLayer = GeocachingSource(filePath);
+    await geocachingLayer.load(context);
+    if (geocachingLayer.hasData()) {
+      LayerManager().addLayerSource(geocachingLayer);
+      return true;
+    }
   } else if (FileManager.isShp(filePath)) {
     ShapefileSource shpLayer = ShapefileSource(filePath);
     await shpLayer.load(context);
@@ -395,7 +412,7 @@ Future<bool> loadLayer(BuildContext context, String filePath) async {
       List<FeatureEntry> features = db.features();
       List<TileEntry> tiles = db.tiles();
 
-      List<String> selectedTables = [];
+      List<String>? selectedTables = [];
       List<String> allTables = [];
       List<String> featureTables = [];
       List<String> tilesTables = [];
@@ -447,7 +464,7 @@ Future<bool> loadLayer(BuildContext context, String filePath) async {
         return true;
       }
     } finally {
-      ch?.close(filePath);
+      ch.close(filePath);
     }
   } else {
     SmashDialogs.showWarningDialog(

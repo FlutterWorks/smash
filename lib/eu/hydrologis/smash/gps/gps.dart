@@ -19,6 +19,7 @@ import 'package:geodesy/geodesy.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:smash/eu/hydrologis/smash/gps/filters.dart';
 import 'package:smash/eu/hydrologis/smash/gps/testlog.dart';
+import 'package:smash/eu/hydrologis/smash/l10n/localization.dart';
 import 'package:smash/eu/hydrologis/smash/models/gps_state.dart';
 import 'package:smash/eu/hydrologis/smash/util/fence.dart';
 import 'package:smash/generated/l10n.dart';
@@ -31,7 +32,7 @@ class CoordinateUtilities {
 
   /// Get the distance between two latlong coordinates in meters, if not otherwise specified by [unit].
   static double getDistance(LatLng ll1, LatLng ll2) {
-    return geodesy.distanceBetweenTwoGeoPoints(ll1, ll2);
+    return geodesy.distanceBetweenTwoGeoPoints(ll1, ll2).toDouble();
   }
 
   /// Get the offset coordinate given a starting point, a distance in meters and an azimuth angle.
@@ -43,6 +44,7 @@ class CoordinateUtilities {
 }
 
 enum GpsStatus { NOGPS, OFF, NOPERMISSION, ON_NO_FIX, ON_WITH_FIX, LOGGING }
+
 const String ARG_LATITUDE = 'latitude';
 const String ARG_LONGITUDE = 'longitude';
 const String ARG_ACCURACY = 'accuracy';
@@ -57,14 +59,16 @@ const String ARG_LONGITUDE_FILTERED = 'longitude_filtered';
 const String ARG_ACCURACY_FILTERED = 'accuracy_filtered';
 
 class SmashPosition {
-  LocationDto _location;
+  late LocationDto _location;
   bool mocked = false;
-  double filteredLatitude;
-  double filteredLongitude;
-  double filteredAccuracy;
+  late double filteredLatitude;
+  late double filteredLongitude;
+  late double filteredAccuracy;
 
   SmashPosition.fromLocation(this._location,
-      {this.filteredLatitude, this.filteredLongitude, this.filteredAccuracy});
+      {required this.filteredLatitude,
+      required this.filteredLongitude,
+      required this.filteredAccuracy});
 
   SmashPosition.fromJson(Map<String, dynamic> json) {
     _location = LocationDto.fromJson({
@@ -89,6 +93,9 @@ class SmashPosition {
       ARG_ALTITUDE: -1.0,
       ARG_HEADING: -1.0,
       ARG_TIME: time,
+      ARG_ACCURACY: -1.0,
+      ARG_SPEED: -1.0,
+      ARG_SPEED_ACCURACY: -1.0,
     });
   }
 
@@ -139,7 +146,7 @@ class SmashLocationAccuracy {
     return [POWERSAVE, LOW, BALANCED, HIGH, NAVIGATION];
   }
 
-  static SmashLocationAccuracy fromCode(int code) {
+  static SmashLocationAccuracy fromCode(int? code) {
     for (var item in values()) {
       if (item.code == code) {
         return item;
@@ -158,7 +165,7 @@ class SmashLocationAccuracy {
   }
 
   static SmashLocationAccuracy fromPreferences() {
-    int prefCode = GpPreferences()
+    int? prefCode = GpPreferences()
         .getIntSync(SmashPreferencesKeys.KEY_GPS_ACCURACY, NAVIGATION.code);
     return fromCode(prefCode);
   }
@@ -194,19 +201,19 @@ abstract class GpsLoggingHandler {
 /// * registre for updates through the [SmashPositionListener] interface
 /// * handle the GPS logging
 ///
-class GpsHandler {
+class GpsHandler with Localization {
   static const GPS_FORCED_OFF_KEY = "GPS_FORCED_OFF";
   static const String _isolateName = "LocatorIsolate";
-  ReceivePort port;
+  ReceivePort? port;
   int allPointsCount = 0;
   int filteredPointsCount = 0;
 
   static final GpsHandler _instance = GpsHandler._internal();
 
-  bool _locationServiceEnabled;
+  late bool _locationServiceEnabled;
 
-  Timer _timer;
-  GpsState _gpsState;
+  late Timer _timer;
+  late GpsState _gpsState;
   bool initialized = false;
 
   /// Accuracy for the location subscription
@@ -218,7 +225,7 @@ class GpsHandler {
   GpsHandler._internal();
 
   static void callback(LocationDto locationDto) async {
-    final SendPort send = IsolateNameServer.lookupPortByName(_isolateName);
+    final SendPort? send = IsolateNameServer.lookupPortByName(_isolateName);
     send?.send(locationDto);
   }
 
@@ -241,7 +248,7 @@ class GpsHandler {
     });
 
     // activate test stream, even if it will be silent
-    TestLogStream().streamSubscription.onData((SmashPosition pos) {
+    TestLogStream().streamSubscription!.onData((SmashPosition pos) {
       _onPositionUpdate(pos);
     });
   }
@@ -260,7 +267,7 @@ class GpsHandler {
     var gpsForcedOff =
         await GpPreferences().getBoolean(GPS_FORCED_OFF_KEY, false);
 
-    if (!gpsForcedOff) {
+    if (!gpsForcedOff!) {
       if (port == null) {
         SMLogger().i("Initialize geolocator");
         await closeGpsIsolate();
@@ -317,7 +324,7 @@ class GpsHandler {
 
   /// Close the handler.
   Future close() async {
-    _timer?.cancel();
+    _timer.cancel();
 
     await closeGpsIsolate();
 
@@ -330,8 +337,8 @@ class GpsHandler {
     }
 
     port = ReceivePort();
-    IsolateNameServer.registerPortWithName(port.sendPort, _isolateName);
-    port.listen((dynamic data) {
+    IsolateNameServer.registerPortWithName(port!.sendPort, _isolateName);
+    port!.listen((dynamic data) {
       if (TestLogStream().isActive) {
         return;
       }
@@ -354,29 +361,27 @@ speed: ${(position.speed * 3.6).toStringAsFixed(0)}km/h
 heading: ${position.heading.round()}
 time: ${TimeUtilities.ISO8601_TS_FORMATTER.format(DateTime.fromMillisecondsSinceEpoch(position.time.toInt()))}""";
 
-        var title = SL.current.gps_smashIsActive; //"SMASH is active"
+        var title = loc.gps_smashIsActive; //"SMASH is active"
         var msg = pos;
         var bigMsg = posLines + "\n" + extraPos;
         if (_gpsState.isLogging) {
-          title = SL.current.gps_smashIsLogging; //"SMASH is logging"
+          title = loc.gps_smashIsLogging; //"SMASH is logging"
 
           var currentLogStats = _gpsState.getCurrentLogStats();
-          double distanceMeter = currentLogStats[0] as double;
-          double distanceMeterFiltered = currentLogStats[1] as double;
-          int timestampDelta = currentLogStats[2] as int;
+          if (currentLogStats[0] != null &&
+              currentLogStats[1] != null &&
+              currentLogStats[2] != null) {
+            double distanceMeter = currentLogStats[0] as double;
+            double distanceMeterFiltered = currentLogStats[1] as double;
+            int timestampDelta = currentLogStats[2] as int;
 
-          if (distanceMeter != null &&
-              timestampDelta != null &&
-              distanceMeterFiltered != null) {
             var timeStr = StringUtilities.formatDurationMillis(timestampDelta);
             var distStr = StringUtilities.formatMeters(distanceMeter);
             var distFilteredStr =
                 StringUtilities.formatMeters(distanceMeterFiltered);
 
-            if (timeStr != null) {
-              msg = "$timeStr, $distStr ($distFilteredStr)";
-              bigMsg = msg + "\n" + bigMsg;
-            }
+            msg = "$timeStr, $distStr ($distFilteredStr)";
+            bigMsg = msg + "\n" + bigMsg;
           }
 
           GPS.BackgroundLocator.updateNotificationText(
@@ -391,11 +396,11 @@ time: ${TimeUtilities.ISO8601_TS_FORMATTER.format(DateTime.fromMillisecondsSince
     SMLogger().i("Register for location updates.");
     var androidNotificationSettings = AndroidNotificationSettings(
       notificationChannelName:
-          SL.current.gps_locationTracking, //"Location tracking"
-      notificationTitle: SL.current
+          loc.gps_locationTracking, //"Location tracking"
+      notificationTitle: loc
           .gps_smashLocServiceIsActive, //"SMASH location service is active."
       notificationMsg: "",
-      notificationBigMsg: SL.current
+      notificationBigMsg: loc
           .gps_backgroundLocIsOnToKeepRegistering, //"Background location is on to keep the app registering the location even when the app is in background."
       notificationIcon: "smash_notification",
       notificationIconColor: SmashColors.mainDecorations,

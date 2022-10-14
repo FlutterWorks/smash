@@ -37,23 +37,26 @@ class ImageWidgetUtilities {
 
   static int saveImageBytesToSmashDb(List<int> imageBytes, BuildContext context,
       DbImage dbImageToCompleteAndSave, String imageIdentifier4Error) {
-    var thumbBytes = ImageUtilities.resizeImage(imageBytes, newWidth: 200);
+    List<int>? thumbBytes =
+        ImageUtilities.resizeImage(imageBytes as Uint8List, newWidth: 200);
 
     ProjectState projectState =
         Provider.of<ProjectState>(context, listen: false);
     var db = projectState.projectDb;
 
     DbImageData imgData = DbImageData()
-      ..thumb = thumbBytes
+      ..thumb = thumbBytes as Uint8List?
       ..data = imageBytes;
 
-    return Transaction(db).runInTransaction((GeopaparazziProjectDb _db) {
+    return Transaction(db as ADb).runInTransaction((GeopaparazziProjectDb _db) {
       try {
-        int imgDataId =
-            _db.insertMap(SqlName(TABLE_IMAGE_DATA), imgData.toMap());
+        int? imgDataId = _db.insertMap(
+            TableName(TABLE_IMAGE_DATA, schemaSupported: false),
+            imgData.toMap());
         dbImageToCompleteAndSave.imageDataId = imgDataId;
-        int imgId = _db.insertMap(
-            SqlName(TABLE_IMAGES), dbImageToCompleteAndSave.toMap());
+        int? imgId = _db.insertMap(
+            TableName(TABLE_IMAGES, schemaSupported: false),
+            dbImageToCompleteAndSave.toMap());
         if (imgId == null) {
           SMLogger().e(
               "Could not save image to db: $imageIdentifier4Error", null, null);
@@ -137,7 +140,7 @@ class SmashImageZoomWidget extends StatelessWidget {
         title: Text(_title),
       ),
       body: FutureBuilder<void>(
-        future: getImageData(projectState.projectDb),
+        future: getImageData(projectState.projectDb!),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.done) {
             // If the Future is complete, display the preview.

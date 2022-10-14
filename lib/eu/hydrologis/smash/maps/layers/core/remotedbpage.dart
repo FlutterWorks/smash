@@ -9,7 +9,7 @@ import 'package:smash/generated/l10n.dart';
 import 'package:smashlibs/smashlibs.dart';
 
 class RemoteDbsWidget extends StatefulWidget {
-  RemoteDbsWidget({Key key}) : super(key: key);
+  RemoteDbsWidget({Key? key}) : super(key: key);
 
   @override
   _RemoteDbsWidgetState createState() => _RemoteDbsWidgetState();
@@ -22,7 +22,7 @@ class _RemoteDbsWidgetState extends State<RemoteDbsWidget> {
 
   void loadConfig() {
     sources = [];
-    var dbJson = GpPreferences().getStringSync(key, "");
+    var dbJson = GpPreferences().getStringSync(key, "") ?? "";
     var list = dbJson.isEmpty ? [] : jsonDecode(dbJson);
     if (list.isNotEmpty) {
       list.forEach((dynamic map) {
@@ -50,30 +50,30 @@ class _RemoteDbsWidgetState extends State<RemoteDbsWidget> {
       body: ListView.builder(
         itemCount: sources.length,
         itemBuilder: (BuildContext context, int index) {
-          DbVectorLayerSource source = sources[index];
-          String url = source.getUrl();
-          String table = source.getName();
-          String user = source.getUser();
-          String where = source.getWhere();
+          DbVectorLayerSource source = sources[index] as DbVectorLayerSource;
+          String? url = source.getUrl();
+          String? table = source.getName();
+          String? user = source.getUser();
+          String? where = source.getWhere();
           if (where != null && where.isNotEmpty) {
             where = "\nwhere: $where";
           } else {
             where = "";
           }
 
-          List<Widget> secondaryActions = [];
-          secondaryActions.add(IconSlideAction(
-              caption: SL.of(context).remoteDbPage_delete, //'Delete'
-              color: SmashColors.mainDanger,
+          List<Widget> endActions = [];
+          endActions.add(SlidableAction(
+              label: SL.of(context).remoteDbPage_delete, //'Delete'
+              foregroundColor: SmashColors.mainDanger,
               icon: SmashIcons.deleteIcon,
-              onTap: () async {
-                bool doDelete = await SmashDialogs.showConfirmDialog(
+              onPressed: (context) async {
+                bool? doDelete = await SmashDialogs.showConfirmDialog(
                     context,
                     SL.of(context).remoteDbPage_delete, //"DELETE"
                     SL
                         .of(context)
                         .remoteDbPage_areYouSureDeleteDatabase); //'Are you sure you want to delete the database configuration?'
-                if (doDelete) {
+                if (doDelete!) {
                   sources.removeAt(index);
                   var list =
                       sources.map((s) => jsonDecode(s.toJson())).toList();
@@ -83,18 +83,18 @@ class _RemoteDbsWidgetState extends State<RemoteDbsWidget> {
                   setState(() {});
                 }
               }));
-          List<Widget> actions = [];
-          actions.add(IconSlideAction(
-              caption: SL.of(context).remoteDbPage_edit, //"Edit"
+          List<Widget> startActions = [];
+          startActions.add(SlidableAction(
+              label: SL.of(context).remoteDbPage_edit, //"Edit"
               icon: SmashIcons.editIcon,
-              color: SmashColors.mainDecorations,
-              onTap: () async {
+              foregroundColor: SmashColors.mainDecorations,
+              onPressed: (context) async {
                 var dbConfigMap = jsonDecode(source.toJson());
                 var newMap =
                     await showRemoteDbPropertiesDialog(context, dbConfigMap);
                 if (newMap != null) {
                   var layerSource = DbVectorLayerSource.fromMap(newMap);
-                  sources[index] = layerSource;
+                  sources[index] = layerSource!;
                   var list =
                       sources.map((s) => jsonDecode(s.toJson())).toList();
                   var jsonString = jsonEncode(list);
@@ -105,12 +105,22 @@ class _RemoteDbsWidgetState extends State<RemoteDbsWidget> {
               }));
 
           return Slidable(
-            actionPane: SlidableDrawerActionPane(),
-            actionExtentRatio: 0.25,
-            actions: actions,
-            secondaryActions: secondaryActions,
+            startActionPane: ActionPane(
+              extentRatio: 0.35,
+              dragDismissible: false,
+              motion: const ScrollMotion(),
+              dismissible: DismissiblePane(onDismissed: () {}),
+              children: startActions,
+            ),
+            endActionPane: ActionPane(
+              extentRatio: 0.35,
+              dragDismissible: false,
+              motion: const ScrollMotion(),
+              dismissible: DismissiblePane(onDismissed: () {}),
+              children: endActions,
+            ),
             child: ListTile(
-              title: Text(url),
+              title: Text(url!),
               subtitle: Padding(
                 padding: const EdgeInsets.only(left: 8.0),
                 child: Text(
@@ -150,7 +160,7 @@ class _RemoteDbsWidgetState extends State<RemoteDbsWidget> {
           Map<String, dynamic> dbConfigMap = {};
           var newMap = await showRemoteDbPropertiesDialog(context, dbConfigMap);
           if (newMap != null) {
-            var dbJson = GpPreferences().getStringSync(key, "");
+            var dbJson = GpPreferences().getStringSync(key, "") ?? "";
             var list = dbJson.isEmpty ? [] : jsonDecode(dbJson);
             list.add(newMap);
             var jsonString = jsonEncode(list);
@@ -165,7 +175,7 @@ class _RemoteDbsWidgetState extends State<RemoteDbsWidget> {
   }
 }
 
-Future<Map<String, dynamic>> showRemoteDbPropertiesDialog(
+Future<Map<String, dynamic>?> showRemoteDbPropertiesDialog(
     BuildContext context, Map<String, dynamic> dbConfigMap) async {
   return await showDialog<Map<String, dynamic>>(
     context: context,
@@ -188,13 +198,13 @@ Future<Map<String, dynamic>> showRemoteDbPropertiesDialog(
           );
         }),
         actions: <Widget>[
-          FlatButton(
+          TextButton(
             child: Text(SL.of(context).remoteDbPage_cancel), //"CANCEL"
             onPressed: () {
               Navigator.of(context).pop(null);
             },
           ),
-          FlatButton(
+          TextButton(
             child: Text(SL.of(context).remoteDbPage_ok), //"OK"
             onPressed: () {
               Navigator.of(context).pop(dbConfigMap);
@@ -209,7 +219,7 @@ Future<Map<String, dynamic>> showRemoteDbPropertiesDialog(
 class RemoteDbPropertiesContainer extends StatefulWidget {
   final Map<String, dynamic> sourceMap;
 
-  RemoteDbPropertiesContainer(this.sourceMap, {Key key}) : super(key: key);
+  RemoteDbPropertiesContainer(this.sourceMap, {Key? key}) : super(key: key);
 
   @override
   _RemoteDbPropertiesContainerState createState() =>
@@ -219,8 +229,9 @@ class RemoteDbPropertiesContainer extends StatefulWidget {
 class _RemoteDbPropertiesContainerState
     extends State<RemoteDbPropertiesContainer> {
   final Map<String, dynamic> sourceMap;
-  List<String> _geomTables;
+  List<String>? _geomTables;
   bool _isLoadingGeomTables = false;
+  String? errorMessage;
 
   _RemoteDbPropertiesContainerState(this.sourceMap) {}
 
@@ -242,7 +253,7 @@ class _RemoteDbPropertiesContainerState
       decoration: urlID,
       validator: (txt) {
         sourceMap[LAYERSKEY_URL] = txt;
-        var errorText = txt.isEmpty
+        var errorText = txt!.isEmpty
             ? SL
                 .of(context)
                 .remoteDbPage_theUrlNeedsToBeDefined //"The url needs to be defined (postgis:host:port/dbname)"
@@ -260,7 +271,7 @@ class _RemoteDbPropertiesContainerState
       decoration: userID,
       validator: (txt) {
         sourceMap[LAYERSKEY_USER] = txt;
-        var errorText = txt.isEmpty
+        var errorText = txt!.isEmpty
             ? SL.of(context).remoteDbPage_theUserNeedsToBeDefined
             : //"The user needs to be defined."
             null;
@@ -278,7 +289,7 @@ class _RemoteDbPropertiesContainerState
       decoration: passwordID,
       validator: (txt) {
         sourceMap[LAYERSKEY_PWD] = txt;
-        var errorText = txt.isEmpty
+        var errorText = txt!.isEmpty
             ? SL.of(context).remoteDbPage_thePasswordNeedsToBeDefined
             : //"The password needs to be defined."
             null;
@@ -291,16 +302,16 @@ class _RemoteDbPropertiesContainerState
       tableWidget = SmashCircularProgress(
           label:
               SL.of(context).remoteDbPage_loadingTables); //"loading tables..."
-    } else if (_geomTables != null) {
-      if (!_geomTables.contains(tableName)) {
-        tableName = _geomTables[0];
+    } else if (_geomTables != null && _geomTables!.isNotEmpty) {
+      if (!_geomTables!.contains(tableName)) {
+        tableName = _geomTables![0];
         sourceMap[LAYERSKEY_LABEL] = tableName;
       }
       tableWidget = DropdownButton<String>(
         isDense: false,
         isExpanded: true,
         value: tableName,
-        items: _geomTables
+        items: _geomTables!
             .map((table) => DropdownMenuItem<String>(
                   child: Text(table),
                   value: table,
@@ -322,7 +333,7 @@ class _RemoteDbPropertiesContainerState
         decoration: tableID,
         validator: (txt) {
           sourceMap[LAYERSKEY_LABEL] = txt;
-          var errorText = txt.isEmpty
+          var errorText = txt!.isEmpty
               ? SL.of(context).remoteDbPage_theTableNeedsToBeDefined
               : //"The table name needs to be defined."
               null;
@@ -335,40 +346,49 @@ class _RemoteDbPropertiesContainerState
           IconButton(
             icon: Icon(MdiIcons.refresh),
             onPressed: () async {
+              errorMessage = null;
               setState(() {
                 _isLoadingGeomTables = true;
               });
-              var s = PostgisSource.fromMap(sourceMap);
-              var db = await PostgisConnectionsHandler()
-                  .open(s.getUrl(), s.getName(), s.getUser(), s.getPassword());
-              if (db != null) {
-                var tables = await db.getTables(true);
-                _geomTables = [];
-                for (var tableName in tables) {
-                  bool isGeom =
-                      await db.getGeometryColumnsForTable(tableName) != null;
-                  if (isGeom) {
-                    _geomTables.add(tableName.name);
+              try {
+                var s = PostgisSource.fromMap(sourceMap);
+                var db = await PostgisConnectionsHandler().open(
+                    s.getUrl(), s.getName(), s.getUser(), s.getPassword());
+                if (db != null) {
+                  var tables = await db.getTables(true);
+                  _geomTables = [];
+                  for (var tableName in tables) {
+                    bool isGeom =
+                        await db.getGeometryColumnsForTable(tableName) != null;
+                    if (isGeom) {
+                      _geomTables!.add(tableName.name);
+                    }
                   }
+                  setState(() {
+                    _isLoadingGeomTables = false;
+                  });
+                } else {
+                  setState(() {
+                    _isLoadingGeomTables = false;
+                  });
+                  SmashDialogs.showWarningDialog(
+                      context,
+                      SL
+                          .of(context)
+                          .remoteDbPage_unableToConnectToDatabase); //"Unable to connect to the database. Check parameters and network."
                 }
+              } catch (e) {
+                errorMessage = e.toString();
                 setState(() {
                   _isLoadingGeomTables = false;
                 });
-              } else {
-                setState(() {
-                  _isLoadingGeomTables = false;
-                });
-                SmashDialogs.showWarningDialog(
-                    context,
-                    SL
-                        .of(context)
-                        .remoteDbPage_unableToConnectToDatabase); //"Unable to connect to the database. Check parameters and network."
               }
             },
           )
         ],
       );
     }
+
     var whereEC = new TextEditingController(text: where);
     var whereID = new InputDecoration(
         labelText: SL
@@ -411,6 +431,12 @@ class _RemoteDbPropertiesContainerState
             padding: const EdgeInsets.all(8.0),
             child: whereWidget,
           ),
+          if (errorMessage != null)
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: SmashUI.normalText(errorMessage!,
+                  color: SmashColors.mainDanger),
+            ),
         ],
       ),
     );
