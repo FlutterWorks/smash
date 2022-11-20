@@ -15,7 +15,6 @@ import 'package:provider/provider.dart';
 import 'package:smash/eu/hydrologis/smash/gps/gps.dart';
 import 'package:smash/eu/hydrologis/smash/l10n/localization.dart';
 import 'package:smash/eu/hydrologis/smash/maps/layers/core/layermanager.dart';
-import 'package:smash/eu/hydrologis/smash/models/gps_state.dart';
 import 'package:smash/eu/hydrologis/smash/models/map_state.dart';
 import 'package:smash/eu/hydrologis/smash/models/mapbuilder.dart';
 import 'package:smash/eu/hydrologis/smash/models/project_state.dart';
@@ -296,6 +295,19 @@ Future<String?> handlePreferences(BuildContext context) async {
     }
 
     await GpPreferences().setBoolean(GpsHandler.GPS_FORCED_OFF_KEY, false);
+
+    bool? allowSelfCert = await GpPreferences().getBoolean(
+        SmashPreferencesKeys.KEY_GSS_DJANGO_SERVER_ALLOW_SELFCERTIFICATE, true);
+    String? gssUrl = await GpPreferences()
+        .getString(SmashPreferencesKeys.KEY_GSS_DJANGO_SERVER_URL, "");
+    if (gssUrl!.isNotEmpty) {
+      var url = gssUrl
+          .replaceFirst("https://", "")
+          .replaceFirst("http://", "")
+          .split(":")[0];
+      NetworkHelper.toggleAllowSelfSignedCertificates(allowSelfCert!, url);
+    }
+
     return null;
   } on Exception catch (e, s) {
     var msg = "Error while reading preferences.";

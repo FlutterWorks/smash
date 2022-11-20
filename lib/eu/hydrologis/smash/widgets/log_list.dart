@@ -6,6 +6,7 @@
 
 import 'package:after_layout/after_layout.dart';
 import 'package:dart_hydrologis_db/dart_hydrologis_db.dart';
+import 'package:dart_hydrologis_utils/dart_hydrologis_utils.dart';
 import 'package:dart_jts/dart_jts.dart' hide Orientation;
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
@@ -13,7 +14,6 @@ import 'package:latlong2/latlong.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:smash/eu/hydrologis/smash/gps/gps.dart';
-import 'package:smash/eu/hydrologis/smash/models/gps_state.dart';
 import 'package:smash/eu/hydrologis/smash/models/map_state.dart';
 import 'package:smash/eu/hydrologis/smash/models/project_state.dart';
 import 'package:smash/eu/hydrologis/smash/project/project_database.dart';
@@ -193,8 +193,8 @@ class LogListWidgetState extends State<LogListWidget> with AfterLayoutMixin {
                 itemCount: _logsList.length,
                 itemBuilder: (context, index) {
                   Log4ListWidget logItem = _logsList[index] as Log4ListWidget;
-                  return LogInfo(
-                      logItem, gpsState, db, loadLogs, useGpsFilteredGenerally,
+                  return LogInfo(logItem, gpsState, projectState, loadLogs,
+                      useGpsFilteredGenerally,
                       key: Key("${logItem.id}"));
                 }),
       ),
@@ -203,14 +203,14 @@ class LogListWidgetState extends State<LogListWidget> with AfterLayoutMixin {
 }
 
 class LogInfo extends StatefulWidget {
-  final GeopaparazziProjectDb db;
+  final ProjectState projectState;
   final gpsState;
   final Log4ListWidget logItem;
   final reloadLogFunction;
   final useGpsFilteredGenerally;
 
-  LogInfo(this.logItem, this.gpsState, this.db, this.reloadLogFunction,
-      this.useGpsFilteredGenerally,
+  LogInfo(this.logItem, this.gpsState, this.projectState,
+      this.reloadLogFunction, this.useGpsFilteredGenerally,
       {Key? key})
       : super(key: key);
 
@@ -220,6 +220,7 @@ class LogInfo extends StatefulWidget {
 
 class _LogInfoState extends State<LogInfo> with AfterLayoutMixin {
   String timeString = "- nv -";
+  String dayString = "- nv -";
   String lengthString = "- nv -";
   String countString = "- nv -";
 
@@ -228,10 +229,14 @@ class _LogInfoState extends State<LogInfo> with AfterLayoutMixin {
 
   @override
   void afterFirstLayout(BuildContext context) {
-    timeString = _getTime(widget.logItem, widget.gpsState, widget.db);
+    dayString = TimeUtilities.ISO8601_TS_FORMATTER
+        .format(DateTime.fromMillisecondsSinceEpoch(widget.logItem.startTime!));
+    var db = widget.projectState.projectDb!;
+
+    timeString = _getTime(widget.logItem, widget.gpsState, widget.projectState);
     // lengthString = _getLength(widget.logItem, widget.gpsState);
-    List<double> upDownLengthCount = _getElevMinMaxAndLengthDeltaCount(
-        widget.logItem, widget.gpsState, widget.db);
+    List<double> upDownLengthCount =
+        _getElevMinMaxAndLengthDeltaCount(widget.logItem, widget.gpsState, db);
     if (upDownLengthCount[0] == -1) {
       upString = "- nv -";
       downString = "- nv -";
@@ -257,9 +262,13 @@ class _LogInfoState extends State<LogInfo> with AfterLayoutMixin {
   @override
   Widget build(BuildContext context) {
     Log4ListWidget logItem = widget.logItem;
-    var db = widget.db;
+    var db = widget.projectState.projectDb!;
 
     var size = 15.0;
+    var dayIcon = Icon(
+      MdiIcons.calendar,
+      size: size,
+    );
     var timeIcon = Icon(
       MdiIcons.clockOutline,
       size: size,
@@ -419,11 +428,20 @@ class _LogInfoState extends State<LogInfo> with AfterLayoutMixin {
                 children: [
                   Padding(
                     padding: EdgeInsets.only(right: pad),
+                    child: dayIcon,
+                  ),
+                  Text(dayString),
+                ],
+              ),
+              Row(
+                children: [
+                  Padding(
+                    padding: EdgeInsets.only(right: pad),
                     child: timeIcon,
                   ),
                   Text(timeString),
                   Padding(
-                    padding: EdgeInsets.only(left: padLeft, right: pad),
+                    padding: EdgeInsets.only(right: pad),
                     child: distIcon,
                   ),
                   Text(lengthString),
@@ -466,40 +484,26 @@ class _LogInfoState extends State<LogInfo> with AfterLayoutMixin {
   }
 
   String _getTime(
-      Log4ListWidget item, GpsState gpsState, GeopaparazziProjectDb db) {
-    var minutes = (item.endTime! - item.startTime!) / 1000 / 60;
+      Log4ListWidget item, GpsState gpsState, ProjectState projectState) {
+    var endTime = item.endTime!;
     if (item.endTime == 0) {
-      if (gpsState.isLogging && item.id == gpsState.currentLogId) {
-        minutes = (DateTime.now().millisecondsSinceEpoch - item.startTime!) /
-            1000 /
-            60;
+      if (projectState.isLogging && item.id == projectState.currentLogId) {
+        endTime = DateTime.now().millisecondsSinceEpoch;
       } else {
         // needs to be fixed using the points. Do it and refresh.
-        var data = db.getLogDataPointsById(item.id!);
-        if (data != null && data.length > 0) {
+        var data = projectState.projectDb!.getLogDataPointsById(item.id!);
+        if (data.length > 0) {
           var last = data.last;
           var ts = last.ts;
-          db.updateGpsLogEndts(item.id!, ts!);
-          minutes = (ts - item.startTime!) / 1000 / 60;
-        } else {
-          minutes = 0;
+          projectState.projectDb!.updateGpsLogEndts(item.id!, ts!);
         }
-
         return "";
       }
     }
 
-    if (minutes > 60) {
-      var h = minutes ~/ 60;
-      var m = (minutes % 60).round();
-      var hStr = h > 1
-          ? SL.of(context).logList_hours //"hours"
-          : SL.of(context).logList_hour; //"hour"
-      return "$h $hStr $m ${SL.of(context).logList_minutes}"; // "$h $hStr $m min";
-    } else {
-      var m = minutes.toInt();
-      return "$m ${SL.of(context).logList_minutes}"; //"$m min"
-    }
+    var timeStr =
+        StringUtilities.formatDurationMillis(endTime - item.startTime!);
+    return timeStr;
   }
 
   List<double> _getElevMinMaxAndLengthDeltaCount(

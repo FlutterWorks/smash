@@ -18,7 +18,6 @@ import 'package:provider/provider.dart';
 import 'package:smash/eu/hydrologis/smash/forms/form_smash_utils.dart';
 import 'package:smash/eu/hydrologis/smash/gps/gps.dart';
 import 'package:smash/eu/hydrologis/smash/mainview_utils.dart';
-import 'package:smash/eu/hydrologis/smash/models/gps_state.dart';
 import 'package:smash/eu/hydrologis/smash/models/mapbuilder.dart';
 import 'package:smash/eu/hydrologis/smash/models/project_state.dart';
 import 'package:smash/eu/hydrologis/smash/project/images.dart';
@@ -365,8 +364,7 @@ class DataLoaderUtilities {
                                       SL
                                           .of(mapBuilder.context!)
                                           .dataLoader_removeNote, //"Remove Note",
-                                      "${SL.of(mapBuilder.context!).dataLoader_areYouSureRemoveNote} " //Are you sure you want to remove note
-                                      "${note.id}?");
+                                      "${SL.of(mapBuilder.context!).dataLoader_areYouSureRemoveNote} (id:${note.id} - ${note.text})");
                               if (doRemove!) {
                                 db.deleteNote(note.id!);
                                 var projectState = Provider.of<ProjectState>(
