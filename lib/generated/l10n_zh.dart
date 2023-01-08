@@ -1,8 +1,8 @@
 import 'l10n.dart';
 
-/// The translations for English (`en`).
-class SLEn extends SL {
-  SLEn([String locale = 'en']) : super(locale);
+/// The translations for Chinese (`zh`).
+class SLZh extends SL {
+  SLZh([String locale = 'zh']) : super(locale);
 
   @override
   String get main_welcome => 'Welcome to SMASH!';
@@ -1491,4 +1491,1101 @@ class SLEn extends SL {
 
   @override
   String get form_smash_cantSaveImageDb => 'Could not save image in database.';
+}
+
+/// The translations for Chinese, using the Han script (`zh_Hans`).
+class SLZhHans extends SLZh {
+  SLZhHans(): super('zh_Hans');
+
+  @override
+  String get main_welcome => '欢迎使用SMASH!';
+
+  @override
+  String get main_check_location_permission => '正在检测位置权限…';
+
+  @override
+  String get main_location_permission_granted => '位置权限已授予.';
+
+  @override
+  String get main_checkingStoragePermission => '正在检测存储权限…';
+
+  @override
+  String get main_storagePermissionGranted => '存储权限已授予.';
+
+  @override
+  String get main_loadingPreferences => '正在载入配置文件…';
+
+  @override
+  String get main_preferencesLoaded => '配置文件载入完毕.';
+
+  @override
+  String get main_loadingWorkspace => '正在载入工作空间…';
+
+  @override
+  String get main_workspaceLoaded => '工作空间载入完毕.';
+
+  @override
+  String get main_loadingTagsList => '正在载入Tag列表…';
+
+  @override
+  String get main_tagsListLoaded => 'Tag列表载入完毕.';
+
+  @override
+  String get main_loadingKnownProjections => '正在载入已知投影…';
+
+  @override
+  String get main_knownProjectionsLoaded => '投影载入完毕.';
+
+  @override
+  String get main_loadingFences => '正在载入地理围栏…';
+
+  @override
+  String get main_fencesLoaded => '地理围栏载入完毕.';
+
+  @override
+  String get main_loadingLayersList => '正在载入图层列表…';
+
+  @override
+  String get main_layersListLoaded => '图层列表加载完毕.';
+
+  @override
+  String get main_locationBackgroundWarning => '下一步授予位置权限将允许GPS在后台记录日志(否则GPS日志将在前台运行)，提示：日志数据只存放在设备本地，不会进行数据上传。';
+
+  @override
+  String get main_StorageIsInternalWarning => '请仔细阅读！\n在 Android 11及以上版本环境下，项目文件夹必须放在\n\nAndroid/data/eu.hydrologis.smash/files/smash\n\n文件夹中。\n如果APP被卸载后，系统将会移除此文件夹，所以请在卸载前备份好你的数据。\n\n关于这个问题，我们正在寻找更夹解决方案。';
+
+  @override
+  String get main_locationPermissionIsMandatoryToOpenSmash => 'SMASH要求必须打开位置权限。';
+
+  @override
+  String get main_storagePermissionIsMandatoryToOpenSmash => 'SMASH要求必须打开存储权限。';
+
+  @override
+  String get main_anErrorOccurredTapToView => '有错误发生，请单击查看。';
+
+  @override
+  String get mainView_loadingData => '正在加载数据…';
+
+  @override
+  String get mainView_turnGpsOn => 'GPS开';
+
+  @override
+  String get mainView_turnGpsOff => 'GPS关';
+
+  @override
+  String get mainView_exit => '退出';
+
+  @override
+  String get mainView_areYouSureCloseTheProject => '关闭工程？';
+
+  @override
+  String get mainView_activeOperationsWillBeStopped => '活动操作将会停止。';
+
+  @override
+  String get mainView_showInteractiveCoachMarks => '显示交互式向导标签。';
+
+  @override
+  String get mainView_openToolsDrawer => '打开工具箱。';
+
+  @override
+  String get mainView_zoomIn => '放大';
+
+  @override
+  String get mainView_zoomOut => '缩小';
+
+  @override
+  String get mainView_formNotes => '表单式注记';
+
+  @override
+  String get mainView_simpleNotes => '简单注记';
+
+  @override
+  String get mainviewUtils_projects => '工程';
+
+  @override
+  String get mainviewUtils_import => '导入';
+
+  @override
+  String get mainviewUtils_export => '导出';
+
+  @override
+  String get mainviewUtils_settings => '设置';
+
+  @override
+  String get mainviewUtils_onlineHelp => '在线帮助';
+
+  @override
+  String get mainviewUtils_about => '关于';
+
+  @override
+  String get mainviewUtils_projectInfo => '工程信息';
+
+  @override
+  String get mainviewUtils_project => '工程';
+
+  @override
+  String get mainviewUtils_database => '数据库';
+
+  @override
+  String get mainviewUtils_extras => '其他';
+
+  @override
+  String get mainviewUtils_availableIcons => '可用图标';
+
+  @override
+  String get mainviewUtils_offlineMaps => '离线地图';
+
+  @override
+  String get mainviewUtils_positionTools => '位置工具';
+
+  @override
+  String get mainviewUtils_goTo => '转到';
+
+  @override
+  String get mainviewUtils_sharePosition => '共享位置';
+
+  @override
+  String get mainviewUtils_rotateMapWithGps => '随着GPS旋转地图';
+
+  @override
+  String get exportWidget_export => '导出';
+
+  @override
+  String get exportWidget_pdfExported => 'PDF导出';
+
+  @override
+  String get exportWidget_exportToPortableDocumentFormat => '导出工程到PDF文档';
+
+  @override
+  String get exportWidget_gpxExported => 'GPX已导出';
+
+  @override
+  String get exportWidget_exportToGpx => '导出工程到GPX';
+
+  @override
+  String get exportWidget_kmlExported => '已导出到KML';
+
+  @override
+  String get exportWidget_exportToKml => '导出工程到KML';
+
+  @override
+  String get exportWidget_imagesToFolderExported => '照片已导出';
+
+  @override
+  String get exportWidget_exportImagesToFolder => '导出工程照片';
+
+  @override
+  String get exportWidget_exportImagesToFolderTitle => '照片列表';
+
+  @override
+  String get exportWidget_geopackageExported => '已导出到Geopakage';
+
+  @override
+  String get exportWidget_exportToGeopackage => '导出工程到Geopackage';
+
+  @override
+  String get exportWidget_exportToGSS => '导出到GSS';
+
+  @override
+  String get gssExport_gssExport => '导出到GSS';
+
+  @override
+  String get gssExport_setProjectDirty => '设置工程为DIRTY？';
+
+  @override
+  String get gssExport_thisCantBeUndone => '此操作无法撤销！';
+
+  @override
+  String get gssExport_restoreProjectAsDirty => '重置工程为dirty。';
+
+  @override
+  String get gssExport_setProjectClean => '设置工程为CLEAN?';
+
+  @override
+  String get gssExport_restoreProjectAsClean => '已重置工程为CLEAN。';
+
+  @override
+  String get gssExport_nothingToSync => '无可同步数据。';
+
+  @override
+  String get gssExport_collectingSyncStats => '正在收集同步状态…';
+
+  @override
+  String get gssExport_unableToSyncDueToError => '同步过程出错，请点击诊断。';
+
+  @override
+  String get gssExport_noGssUrlSet => '未设置GSS服务端IP，请检查设置。';
+
+  @override
+  String get gssExport_noGssPasswordSet => '未设置GSS服务端密码，请检查设置。';
+
+  @override
+  String get gssExport_synStats => '同步状态';
+
+  @override
+  String get gssExport_followingDataWillBeUploaded => '以下数据将同步到服务端。';
+
+  @override
+  String get gssExport_gpsLogs => 'GPS日志：';
+
+  @override
+  String get gssExport_simpleNotes => '建筑注记：';
+
+  @override
+  String get gssExport_formNotes => '表单注记：';
+
+  @override
+  String get gssExport_images => '照片列表：';
+
+  @override
+  String get gssExport_shouldNotHappen => '不应该发生';
+
+  @override
+  String get gssExport_upload => '上传';
+
+  @override
+  String get geocoding_geocoding => '地理编码';
+
+  @override
+  String get geocoding_nothingToLookFor => '没找到相关信息，插入一个地址。';
+
+  @override
+  String get geocoding_launchGeocoding => '启动地理编码';
+
+  @override
+  String get geocoding_searching => '查找中…';
+
+  @override
+  String get gps_smashIsActive => 'SMASH 已处于活动状态';
+
+  @override
+  String get gps_smashIsLogging => 'SMASH 正在记录日志';
+
+  @override
+  String get gps_locationTracking => '位置跟踪';
+
+  @override
+  String get gps_smashLocServiceIsActive => 'SMASH 位置服务已激活。';
+
+  @override
+  String get gps_backgroundLocIsOnToKeepRegistering => '后台位置服务一直开启，以保证APP能记录位置信息。';
+
+  @override
+  String get gssImport_gssImport => 'GSS导入';
+
+  @override
+  String get gssImport_downloadingDataList => '正在下载数据列表…';
+
+  @override
+  String get gssImport_unableDownloadDataList => '下载数据列表时出错，请检查你的设置和日志。';
+
+  @override
+  String get gssImport_noGssUrlSet => '未设置GSS服务器URL，请检查设置。';
+
+  @override
+  String get gssImport_noGssPasswordSet => '未设置GSS密码，请检查设置。';
+
+  @override
+  String get gssImport_noPermToAccessServer => '无权访问服务器，请检查你的认证信息。';
+
+  @override
+  String get gssImport_data => '数据';
+
+  @override
+  String get gssImport_dataSetsDownloadedMapsFolder => '数据集已下载到地图文件夹中。';
+
+  @override
+  String get gssImport_noDataAvailable => '无可用数据。';
+
+  @override
+  String get gssImport_projects => '工程';
+
+  @override
+  String get gssImport_projectsDownloadedProjectFolder => '工程数据已下载到 projects文件夹。';
+
+  @override
+  String get gssImport_noProjectsAvailable => '无可用工程。';
+
+  @override
+  String get gssImport_forms => '表单';
+
+  @override
+  String get gssImport_tagsDownloadedFormsFolder => 'tag文件已下载到 forms文件夹。';
+
+  @override
+  String get gssImport_noTagsAvailable => '无tag可用。';
+
+  @override
+  String get importWidget_import => '导入';
+
+  @override
+  String get importWidget_importFromGeopaparazzi => '从GSS服务器导入';
+
+  @override
+  String get layersView_layerList => '图层列表';
+
+  @override
+  String get layersView_loadRemoteDatabase => '载入远程数据库';
+
+  @override
+  String get layersView_loadOnlineSources => '加载在线数据源';
+
+  @override
+  String get layersView_loadLocalDatasets => '加载本地数据集';
+
+  @override
+  String get layersView_loading => '加载中…';
+
+  @override
+  String get layersView_zoomTo => '放大';
+
+  @override
+  String get layersView_properties => '属性';
+
+  @override
+  String get layersView_delete => '删除';
+
+  @override
+  String get layersView_projCouldNotBeRecognized => '无法识别的投影，单击手动输入epsg代码。';
+
+  @override
+  String get layersView_projNotSupported => '不支持的投影，单击解决。';
+
+  @override
+  String get layersView_onlyImageFilesWithWorldDef => '仅支持有world文件定义的影像文件。';
+
+  @override
+  String get layersView_onlyImageFileWithPrjDef => '仅支持有投影文件定义的影像数据。';
+
+  @override
+  String get layersView_selectTableToLoad => '选择要加载的表格。';
+
+  @override
+  String get layersView_fileFormatNotSUpported => '文件格式不支持。';
+
+  @override
+  String get onlineSourcesPage_onlineSourcesCatalog => '在线数据源分类';
+
+  @override
+  String get onlineSourcesPage_loadingTmsLayers => '正在载入TMS图层…';
+
+  @override
+  String get onlineSourcesPage_loadingWmsLayers => '正在加载WMS图层…';
+
+  @override
+  String get onlineSourcesPage_importFromFile => '从文件导入';
+
+  @override
+  String get onlineSourcesPage_theFile => '文件';
+
+  @override
+  String get onlineSourcesPage_doesntExist => '不存在';
+
+  @override
+  String get onlineSourcesPage_onlineSourcesImported => '在线数据源已导入。';
+
+  @override
+  String get onlineSourcesPage_exportToFile => '导出到文件';
+
+  @override
+  String get onlineSourcesPage_exportedTo => '导出到：';
+
+  @override
+  String get onlineSourcesPage_delete => '删除';
+
+  @override
+  String get onlineSourcesPage_addToLayers => '添加到图层';
+
+  @override
+  String get onlineSourcesPage_setNameTmsService => '设置TMS服务名称';
+
+  @override
+  String get onlineSourcesPage_enterName => '输入名称';
+
+  @override
+  String get onlineSourcesPage_pleaseEnterValidName => '请输入可用名称';
+
+  @override
+  String get onlineSourcesPage_insertUrlOfService => '插入服务URL。';
+
+  @override
+  String get onlineSourcesPage_placeXyzBetBrackets => '在小括弧中输入x,y,z.';
+
+  @override
+  String get onlineSourcesPage_pleaseEnterValidTmsUrl => '请输入可用的TMS URL';
+
+  @override
+  String get onlineSourcesPage_enterUrl => '输入URL';
+
+  @override
+  String get onlineSourcesPage_enterSubDomains => '输入子域名';
+
+  @override
+  String get onlineSourcesPage_addAttribution => '添加所有权信息。';
+
+  @override
+  String get onlineSourcesPage_enterAttribution => '输入所有者';
+
+  @override
+  String get onlineSourcesPage_setMinMaxZoom => '设置最大最小缩放级别。';
+
+  @override
+  String get onlineSourcesPage_minZoom => '最小缩放级别';
+
+  @override
+  String get onlineSourcesPage_maxZoom => '最大缩放级别';
+
+  @override
+  String get onlineSourcesPage_pleaseCheckYourData => '请检查你的数据';
+
+  @override
+  String get onlineSourcesPage_details => '详细信息';
+
+  @override
+  String get onlineSourcesPage_name => '名称： ';
+
+  @override
+  String get onlineSourcesPage_subDomains => '子域名： ';
+
+  @override
+  String get onlineSourcesPage_attribution => '所有权： ';
+
+  @override
+  String get onlineSourcesPage_cancel => '取消';
+
+  @override
+  String get onlineSourcesPage_ok => '确定';
+
+  @override
+  String get onlineSourcesPage_newTmsOnlineService => '新建TMS在线服务';
+
+  @override
+  String get onlineSourcesPage_save => '保存';
+
+  @override
+  String get onlineSourcesPage_theBaseUrlWithQuestionMark => '基本URL以?结尾。';
+
+  @override
+  String get onlineSourcesPage_pleaseEnterValidWmsUrl => '请输入可用WMS URL';
+
+  @override
+  String get onlineSourcesPage_setWmsLayerName => '设置WMS层名';
+
+  @override
+  String get onlineSourcesPage_enterLayerToLoad => '输入要加载图层';
+
+  @override
+  String get onlineSourcesPage_pleaseEnterValidLayer => '请输入可用图层';
+
+  @override
+  String get onlineSourcesPage_setWmsImageFormat => '设置WMS图片格式';
+
+  @override
+  String get onlineSourcesPage_addAnAttribution => '增加所有权信息。';
+
+  @override
+  String get onlineSourcesPage_layer => '图层： ';
+
+  @override
+  String get onlineSourcesPage_url => 'URL： ';
+
+  @override
+  String get onlineSourcesPage_format => '格式';
+
+  @override
+  String get onlineSourcesPage_newWmsOnlineService => '新建WMS在线服务';
+
+  @override
+  String get remoteDbPage_remoteDatabases => '远程数据库';
+
+  @override
+  String get remoteDbPage_delete => '删除';
+
+  @override
+  String get remoteDbPage_areYouSureDeleteDatabase => '删除数据库配置？';
+
+  @override
+  String get remoteDbPage_edit => '编辑';
+
+  @override
+  String get remoteDbPage_table => '表格';
+
+  @override
+  String get remoteDbPage_user => '用户';
+
+  @override
+  String get remoteDbPage_loadInMap => '载入到地图中。';
+
+  @override
+  String get remoteDbPage_databaseParameters => '数据库参数';
+
+  @override
+  String get remoteDbPage_cancel => '取消';
+
+  @override
+  String get remoteDbPage_ok => '确定';
+
+  @override
+  String get remoteDbPage_theUrlNeedsToBeDefined => '必须定义URL。格式如(postgis:host:port/databasename)';
+
+  @override
+  String get remoteDbPage_theUserNeedsToBeDefined => '必须定义用户。';
+
+  @override
+  String get remoteDbPage_password => '密码';
+
+  @override
+  String get remoteDbPage_thePasswordNeedsToBeDefined => '必须设置密码。';
+
+  @override
+  String get remoteDbPage_loadingTables => '正在加载表格…';
+
+  @override
+  String get remoteDbPage_theTableNeedsToBeDefined => '必须定义表格名称。';
+
+  @override
+  String get remoteDbPage_unableToConnectToDatabase => '无法连接数据库。请检查你的参数及网络。';
+
+  @override
+  String get remoteDbPage_optionalWhereCondition => '\"where\" 条件';
+
+  @override
+  String get geoImage_tiffProperties => 'TIFF属性';
+
+  @override
+  String get geoImage_opacity => '透明度';
+
+  @override
+  String get geoImage_colorToHide => '要隐藏的颜色';
+
+  @override
+  String get gpx_gpxProperties => 'GPX属性';
+
+  @override
+  String get gpx_wayPoints => '方向点';
+
+  @override
+  String get gpx_color => '颜色';
+
+  @override
+  String get gpx_size => '尺寸';
+
+  @override
+  String get gpx_viewLabelsIfAvailable => '如果可能则查看标签？';
+
+  @override
+  String get gpx_tracksRoutes => '航迹/航线';
+
+  @override
+  String get gpx_width => '宽';
+
+  @override
+  String get gpx_palette => '调色板';
+
+  @override
+  String get tiles_tileProperties => '瓦片属性';
+
+  @override
+  String get tiles_opacity => '透明度';
+
+  @override
+  String get tiles_loadGeoPackageAsOverlay => '将geopackage 瓦片当做普通图像进行加载，而不是作为瓦片图层（最好是由gdal生成的数据，并且有不同的投影）。';
+
+  @override
+  String get tiles_colorToHide => '要隐藏的颜色';
+
+  @override
+  String get wms_wmsProperties => 'WMS属性';
+
+  @override
+  String get wms_opacity => '透明度';
+
+  @override
+  String get featureAttributesViewer_loadingData => '正在加载数据…';
+
+  @override
+  String get featureAttributesViewer_setNewValue => '设置新值';
+
+  @override
+  String get featureAttributesViewer_field => '字段';
+
+  @override
+  String get featureAttributesViewer_value => '值';
+
+  @override
+  String get projectsView_projectsView => '工程视图';
+
+  @override
+  String get projectsView_openExistingProject => '打开已存在工程';
+
+  @override
+  String get projectsView_createNewProject => '创建新工程';
+
+  @override
+  String get projectsView_recentProjects => '最近工程';
+
+  @override
+  String get projectsView_newProject => '新建工程';
+
+  @override
+  String get projectsView_enterNameForNewProject => '输入新工程名称或者采取建议默认工程名。';
+
+  @override
+  String get dataLoader_note => '注意';
+
+  @override
+  String get dataLoader_Note => '注意事项';
+
+  @override
+  String get dataLoader_hasForm => '存在表单';
+
+  @override
+  String get dataLoader_POI => 'POI';
+
+  @override
+  String get dataLoader_savingImageToDB => '保存照片到数据库…';
+
+  @override
+  String get dataLoader_removeNote => '移除注记';
+
+  @override
+  String get dataLoader_areYouSureRemoveNote => '移除注记？';
+
+  @override
+  String get dataLoader_image => '照片';
+
+  @override
+  String get dataLoader_longitude => '经度';
+
+  @override
+  String get dataLoader_latitude => '纬度';
+
+  @override
+  String get dataLoader_altitude => '高程';
+
+  @override
+  String get dataLoader_timestamp => '时间戳';
+
+  @override
+  String get dataLoader_removeImage => '移除图片';
+
+  @override
+  String get dataLoader_areYouSureRemoveImage => '移除此图片？';
+
+  @override
+  String get images_loadingImage => '正在加载图片…';
+
+  @override
+  String get about_loadingInformation => '正在加载信息…';
+
+  @override
+  String get about_ABOUT => '关于： ';
+
+  @override
+  String get about_smartMobileAppForSurveyor => '让调绘者愉快的智能移动APP';
+
+  @override
+  String get about_applicationVersion => '版本';
+
+  @override
+  String get about_license => '授权文件';
+
+  @override
+  String get about_isAvailableUnderGPL3 => ' 基于 GPLv3+.';
+
+  @override
+  String get about_sourceCode => '源码';
+
+  @override
+  String get about_tapHereToVisitRepo => '单击此处查看源码';
+
+  @override
+  String get about_legalInformation => '法律信息';
+
+  @override
+  String get about_copyright2020HydroloGIS => '版权所有方：© 2020, HydroloGIS S.r.l。保留部分权利。单击查看。';
+
+  @override
+  String get about_supportedBy => '支持方';
+
+  @override
+  String get about_partiallySupportedByUniversityTrento => '特伦托大学 Steep Stream 项目部分支持。';
+
+  @override
+  String get about_privacyPolicy => '隐私政策';
+
+  @override
+  String get about_tapHereToSeePrivacyPolicy => '单击此处查看包含用户及位置数据的隐私政策。';
+
+  @override
+  String get gpsInfoButton_noGpsInfoAvailable => '无可用GPS信息…';
+
+  @override
+  String get gpsInfoButton_timestamp => '时间戳';
+
+  @override
+  String get gpsInfoButton_speed => '速度';
+
+  @override
+  String get gpsInfoButton_heading => '方向';
+
+  @override
+  String get gpsInfoButton_accuracy => '精度';
+
+  @override
+  String get gpsInfoButton_altitude => '海拔';
+
+  @override
+  String get gpsInfoButton_latitude => '纬度';
+
+  @override
+  String get gpsInfoButton_copyLatitudeToClipboard => '拷贝纬度到粘贴板。';
+
+  @override
+  String get gpsInfoButton_longitude => '经度';
+
+  @override
+  String get gpsInfoButton_copyLongitudeToClipboard => '拷贝经度到粘贴板。';
+
+  @override
+  String get gpsLogButton_stopLogging => '停止记录？';
+
+  @override
+  String get gpsLogButton_stopLoggingAndCloseLog => '停止记录并关闭当前GPS日志？';
+
+  @override
+  String get gpsLogButton_newLog => '新建日志';
+
+  @override
+  String get gpsLogButton_enterNameForNewLog => '输入新日志名称';
+
+  @override
+  String get gpsLogButton_couldNotStartLogging => '无法启动日志记录： ';
+
+  @override
+  String get imageWidgets_loadingImage => '正在加载图像…';
+
+  @override
+  String get logList_gpsLogsList => 'GPS日志列表';
+
+  @override
+  String get logList_selectAll => '全选';
+
+  @override
+  String get logList_unSelectAll => '全不选';
+
+  @override
+  String get logList_invertSelection => '反选';
+
+  @override
+  String get logList_mergeSelected => '合并选择';
+
+  @override
+  String get logList_loadingLogs => '正在加载日志…';
+
+  @override
+  String get logList_zoomTo => '缩放到';
+
+  @override
+  String get logList_properties => '属性';
+
+  @override
+  String get logList_profileView => '配置文件视图';
+
+  @override
+  String get logList_toGPX => '转为GPX';
+
+  @override
+  String get logList_gpsSavedInExportFolder => 'GPX已保存到export文件夹。';
+
+  @override
+  String get logList_errorOccurredExportingLogGPX => '无法导出日志到GPX。';
+
+  @override
+  String get logList_delete => '删除';
+
+  @override
+  String get logList_DELETE => '删除';
+
+  @override
+  String get logList_areYouSureDeleteTheLog => '删除日志？';
+
+  @override
+  String get logList_hours => '小时数';
+
+  @override
+  String get logList_hour => '小时';
+
+  @override
+  String get logList_minutes => '最小';
+
+  @override
+  String get logProperties_gpsLogProperties => 'GPS日志属性';
+
+  @override
+  String get logProperties_logName => '日志名称';
+
+  @override
+  String get logProperties_start => '开始';
+
+  @override
+  String get logProperties_end => '结束';
+
+  @override
+  String get logProperties_duration => '期间';
+
+  @override
+  String get logProperties_color => '颜色';
+
+  @override
+  String get logProperties_palette => '调色板';
+
+  @override
+  String get logProperties_width => '宽';
+
+  @override
+  String get logProperties_distanceAtPosition => '当前点距离：';
+
+  @override
+  String get logProperties_totalDistance => '总距离：';
+
+  @override
+  String get logProperties_gpsLogView => 'GPS日志视图';
+
+  @override
+  String get logProperties_disableStats => '关闭状态';
+
+  @override
+  String get logProperties_enableStats => '打开状态';
+
+  @override
+  String get logProperties_totalDuration => '全部时间：';
+
+  @override
+  String get logProperties_timestamp => '时间戳：';
+
+  @override
+  String get logProperties_durationAtPosition => '在当前位置时间：';
+
+  @override
+  String get logProperties_speed => '速度：';
+
+  @override
+  String get logProperties_elevation => '高程：';
+
+  @override
+  String get noteList_simpleNotesList => '简单标注列表';
+
+  @override
+  String get noteList_formNotesList => '表单标注列表';
+
+  @override
+  String get noteList_loadingNotes => '正在加载标注…';
+
+  @override
+  String get noteList_zoomTo => '缩放到';
+
+  @override
+  String get noteList_edit => '编辑';
+
+  @override
+  String get noteList_properties => '属性';
+
+  @override
+  String get noteList_delete => '删除';
+
+  @override
+  String get noteList_DELETE => '删除';
+
+  @override
+  String get noteList_areYouSureDeleteNote => '删除此标注？';
+
+  @override
+  String get settings_settings => '设置';
+
+  @override
+  String get settings_camera => '照相机';
+
+  @override
+  String get settings_cameraResolution => '照相机分辨率';
+
+  @override
+  String get settings_resolution => '分辨率';
+
+  @override
+  String get settings_theCameraResolution => '此相机分辨率';
+
+  @override
+  String get settings_screen => '屏幕';
+
+  @override
+  String get settings_screenScaleBarIconSize => '屏幕，比例尺以及图标尺寸';
+
+  @override
+  String get settings_keepScreenOn => '保持屏幕开启';
+
+  @override
+  String get settings_retinaScreenMode => 'HiDP屏幕模式';
+
+  @override
+  String get settings_toApplySettingEnterExitLayerView => '输入并退出图层视图以应用到设置。';
+
+  @override
+  String get settings_colorPickerToUse => '颜色拾取器';
+
+  @override
+  String get settings_mapCenterCross => '地图中心十字';
+
+  @override
+  String get settings_color => '颜色';
+
+  @override
+  String get settings_size => '尺寸';
+
+  @override
+  String get settings_width => '宽';
+
+  @override
+  String get settings_mapToolsIconSize => '地图工具图标尺寸';
+
+  @override
+  String get settings_gps => 'GPS';
+
+  @override
+  String get settings_gpsFiltersAndMockLoc => 'GPS过滤器和位置模拟';
+
+  @override
+  String get settings_livePreview => '现场预览';
+
+  @override
+  String get settings_noPointAvailableYet => '至今无可以点。';
+
+  @override
+  String get settings_longitudeDeg => '经度[deg]';
+
+  @override
+  String get settings_latitudeDeg => '纬度[deg]';
+
+  @override
+  String get settings_accuracyM => '精度 [米]';
+
+  @override
+  String get settings_altitudeM => '海拔 [m]';
+
+  @override
+  String get settings_headingDeg => '方向 [deg]';
+
+  @override
+  String get settings_speedMS => '速度[m/s]';
+
+  @override
+  String get settings_isLogging => '记录日志？';
+
+  @override
+  String get settings_mockLocations => '模拟位置？';
+
+  @override
+  String get settings_minDistFilterBlocks => '最小距离过滤块';
+
+  @override
+  String get settings_minDistFilterPasses => '最小距离过滤通过';
+
+  @override
+  String get settings_minTimeFilterBlocks => '最少时间过滤块';
+
+  @override
+  String get settings_minTimeFilterPasses => '最小时间过滤通过数';
+
+  @override
+  String get settings_hasBeenBlocked => '未通过数量';
+
+  @override
+  String get settings_distanceFromPrevM => '与前一个点距离[m]';
+
+  @override
+  String get settings_timeFromPrevS => '与前一时间点相差[s]';
+
+  @override
+  String get settings_locationInfo => '位置信息';
+
+  @override
+  String get settings_filters => '过滤器';
+
+  @override
+  String get settings_disableFilters => '关闭过滤器。';
+
+  @override
+  String get settings_enableFilters => '打开过滤器。';
+
+  @override
+  String get settings_zoomIn => '放大';
+
+  @override
+  String get settings_zoomOut => '缩小';
+
+  @override
+  String get settings_activatePointFlow => '激活点流。';
+
+  @override
+  String get settings_pausePointsFlow => '暂停点流。';
+
+  @override
+  String get settings_visualizePointCount => '可视化点数量';
+
+  @override
+  String get settings_showGpsPointsValidPoints => '显示可用GPS点数量。';
+
+  @override
+  String get settings_showGpsPointsAllPoints => '显示所有GPS点数量。';
+
+  @override
+  String get settings_logFilters => '日志过滤器';
+
+  @override
+  String get settings_minDistanceBetween2Points => '两点间最小距离。';
+
+  @override
+  String get settings_minTimespanBetween2Points => '两点间最小时间差。';
+
+  @override
+  String get settings_gpsFilter => 'GPS过滤器';
+
+  @override
+  String get settings_disable => '关闭';
+
+  @override
+  String get settings_enable => '打开';
+
+  @override
+  String get settings_theUseOfTheGps => '使用滤波GPS。';
+
+  @override
+  String get settings_warningThisWillAffectGpsPosition => '警告：这将会影响GPS位置，标记插入，日志统计和图表。';
+
+  @override
+  String get settings_MockLocations => '模拟位置';
+
+  @override
+  String get settings_testGpsLogDemoUse => '为演示用的测试GPS日志。';
+
+  @override
+  String get settings_setDurationGpsPointsInMilli => '设置GPS点间隔时间(毫秒数)。';
+
+  @override
+  String get settings_SETTING => '设置';
+
+  @override
+  String get settings_setMockedGpsDuration => '设置GPS模拟时间间隔';
+
+  @override
+  String get settings_theValueHasToBeInt => '此值必须是个完整数值。';
+
+  @override
+  String get settings_milliseconds => '毫秒数';
+
+  @override
+  String get settings_useGoogleToImproveLoc => '使用Google服务改进位置';
+
+  @override
+  String get settings_useOfGoogleServicesRestart => '使用Google服务（需要重启app）。';
 }
