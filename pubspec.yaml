@@ -5,8 +5,8 @@ name: smash
 description: The Smart Mobile Application for Surveyor's Happyness.
 publish_to: none
 
-version: 1.7.4+66 # we keep the build number growing to have it properly handled in android
-# agvtool new-version -all 58
+version: 1.7.5+67 # we keep the build number growing to have it properly handled in android
+# agvtool new-version -all 67
 
 environment:
   sdk: ">=2.12.0 <3.0.0"
@@ -37,7 +37,7 @@ dependencies:
     # path: ../smash_import_export_plugins/
     git:
       url: https://github.com/geopaparazzi/smash_import_export_plugins.git
-      ref: 187924f
+      ref: e758fe5
 
 
   dart_shp: ^0.4.0
