@@ -7,26 +7,16 @@
 import 'dart:core';
 
 import 'package:dart_jts/dart_jts.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_geopackage/flutter_geopackage.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:geoimage/geoimage.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
-import 'package:smash/eu/hydrologis/smash/maps/layers/core/layermanager.dart';
-import 'package:smash/eu/hydrologis/smash/maps/layers/core/layersource.dart';
 import 'package:smash/eu/hydrologis/smash/maps/layers/core/onlinesourcespage.dart';
 import 'package:smash/eu/hydrologis/smash/maps/layers/core/remotedbpage.dart';
-import 'package:smash/eu/hydrologis/smash/maps/layers/types/geocaching.dart';
-import 'package:smash/eu/hydrologis/smash/maps/layers/types/geoimage.dart';
-import 'package:smash/eu/hydrologis/smash/maps/layers/types/geopackage.dart';
-import 'package:smash/eu/hydrologis/smash/maps/layers/types/gpx.dart';
-import 'package:smash/eu/hydrologis/smash/maps/layers/types/shapefile.dart';
-import 'package:smash/eu/hydrologis/smash/maps/layers/types/tiles.dart';
-import 'package:smash/eu/hydrologis/smash/models/map_state.dart';
+import 'package:smash/eu/hydrologis/smash/widgets/settings.dart';
 import 'package:smash/generated/l10n.dart';
 import 'package:smashlibs/smashlibs.dart';
 
@@ -44,7 +34,7 @@ class LayersPageState extends State<LayersPage> {
 
   @override
   Widget build(BuildContext context) {
-    List<LayerSource> _layersList =
+    List<LayerSource?> _layersList =
         LayerManager().getLayerSources(onlyActive: false);
 
     List<Widget> listItems = createLayersList(_layersList, context);
@@ -60,32 +50,6 @@ class LayersPageState extends State<LayersPage> {
           appBar: AppBar(
             title: Text(SL.of(context).layersView_layerList), //"Layer List"
             actions: <Widget>[
-              IconButton(
-                icon: Icon(MdiIcons.database),
-                onPressed: () async {
-                  setState(() {
-                    isLoadingData = true;
-                  });
-
-                  var source = await Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (BuildContext context) => RemoteDbsWidget(),
-                      ));
-                  if (source != null) {
-                    await source.load(context);
-                    LayerManager().addLayerSource(source);
-                    _somethingChanged = true;
-                  }
-
-                  setState(() {
-                    isLoadingData = false;
-                  });
-                },
-                tooltip: SL
-                    .of(context)
-                    .layersView_loadRemoteDatabase, //"Load remote database"
-              ),
               IconButton(
                 icon: Icon(MdiIcons.earth),
                 onPressed: () async {
@@ -127,6 +91,46 @@ class LayersPageState extends State<LayersPage> {
                     .of(context)
                     .layersView_loadLocalDatasets, //"Load local datasets"
               ),
+              PopupMenuButton<int>(
+                onSelected: (value) async {
+                  if (value == 1) {
+                    setState(() {
+                      isLoadingData = true;
+                    });
+
+                    var source = await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (BuildContext context) => RemoteDbsWidget(),
+                        ));
+                    if (source != null) {
+                      await source.load(context);
+                      LayerManager().addLayerSource(source);
+                      _somethingChanged = true;
+                    }
+
+                    setState(() {
+                      isLoadingData = false;
+                    });
+                  } else if (value == 2) {
+                    openPluginsViewSettings();
+                  }
+                },
+                itemBuilder: (BuildContext context) {
+                  var txt1 = SL.of(context).layersView_loadRemoteDatabase;
+                  var txt2 = SL.of(context).settings_SETTING;
+                  return [
+                    PopupMenuItem<int>(
+                      value: 1,
+                      child: Text(txt1),
+                    ),
+                    PopupMenuItem<int>(
+                      value: 2,
+                      child: Text(txt2),
+                    ),
+                  ];
+                },
+              ),
             ],
           ),
           body: isLoadingData
@@ -147,6 +151,18 @@ class LayersPageState extends State<LayersPage> {
         ));
   }
 
+  Future openPluginsViewSettings() async {
+    Dialog settingsDialog = Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
+      child: Padding(
+        padding: const EdgeInsets.only(top: 8.0, bottom: 8.0),
+        child: PluginsViewSetting(),
+      ),
+    );
+    await showDialog(
+        context: context, builder: (BuildContext context) => settingsDialog);
+  }
+
   Future loadSelectedFile(selectedPath, BuildContext context) async {
     if (selectedPath != null) {
       await loadLayer(context, selectedPath);
@@ -158,10 +174,10 @@ class LayersPageState extends State<LayersPage> {
   }
 
   List<Widget> createLayersList(
-      List<LayerSource> _layersList, BuildContext context) {
+      List<LayerSource?> _layersList, BuildContext context) {
     final List fixedList = Iterable<int>.generate(_layersList.length).toList();
-    return fixedList.map((idx) {
-      var layerSourceItem = _layersList[idx];
+    return fixedList.where((idx) => _layersList[idx] != null).map((idx) {
+      var layerSourceItem = _layersList[idx]!;
       var srid = layerSourceItem.getSrid();
       bool? prjSupported;
       if (srid != null) {
@@ -177,7 +193,7 @@ class LayersPageState extends State<LayersPage> {
             foregroundColor: SmashColors.mainDecorations,
             icon: MdiIcons.magnifyScan,
             onPressed: (context) async {
-              LatLngBounds? bb = await layerSourceItem.getBounds();
+              LatLngBounds? bb = await layerSourceItem.getBounds(context);
               if (bb != null) {
                 setLayersOnChange(_layersList);
 
@@ -202,6 +218,9 @@ class LayersPageState extends State<LayersPage> {
                 if (layerSourceItem is SldLayerSource) {
                   (layerSourceItem as SldLayerSource).updateStyle(newSldString);
                 }
+                if (layerSourceItem is LoadableLayerSource) {
+                  layerSourceItem.isLoaded = false;
+                }
               }
               _somethingChanged = true;
             }));
@@ -222,6 +241,7 @@ class LayersPageState extends State<LayersPage> {
       var key = "$idx-${layerSourceItem.getName()}";
       return Slidable(
         key: Key(key),
+        closeOnScroll: false,
         startActionPane: ActionPane(
           extentRatio: 0.35,
           dragDismissible: false,
@@ -333,8 +353,11 @@ class LayersPageState extends State<LayersPage> {
     });
   }
 
-  void setLayersOnChange(List<LayerSource> _layersList) {
-    List<String> layers = _layersList.map((ls) => ls.toJson()).toList();
+  void setLayersOnChange(List<LayerSource?> _layersList) {
+    List<String> layers = _layersList
+        .where((ls) => ls != null)
+        .map((ls) => ls!.toJson())
+        .toList();
     GpPreferences().setLayerInfoList(layers);
   }
 }
@@ -357,6 +380,13 @@ Future<bool> loadLayer(BuildContext context, String filePath) async {
     await gpxLayer.load(context);
     if (gpxLayer.hasData()) {
       LayerManager().addLayerSource(gpxLayer);
+      return true;
+    }
+  } else if (FileManager.isGeojson(filePath)) {
+    GeojsonSource geojsonLayer = GeojsonSource(filePath);
+    await geojsonLayer.load(context);
+    if (geojsonLayer.hasData()) {
+      LayerManager().addLayerSource(geojsonLayer);
       return true;
     }
   } else if (FileManager.isGeocaching(filePath)) {

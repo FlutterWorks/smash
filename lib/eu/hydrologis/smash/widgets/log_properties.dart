@@ -12,12 +12,10 @@ import 'package:dart_jts/dart_jts.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/plugin_api.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:map_elevation/map_elevation.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:smash/eu/hydrologis/smash/gps/gps.dart';
 import 'package:smash/eu/hydrologis/smash/models/project_state.dart';
-import 'package:smash/eu/hydrologis/smash/util/elevcolor.dart';
 import 'package:smash/eu/hydrologis/smash/widgets/log_list.dart';
 import 'package:smash/generated/l10n.dart';
 import 'package:smashlibs/com/hydrologis/flutterlibs/utils/logging.dart';
@@ -282,17 +280,6 @@ class LogPropertiesWidgetState extends State<LogPropertiesWidget> {
   }
 }
 
-class LatLngExt extends ElevationPoint {
-  double prog;
-  double speed;
-  double accuracy;
-  int ts;
-
-  LatLngExt(double latitude, double longitude, double altim, this.prog,
-      this.speed, this.ts, this.accuracy)
-      : super(latitude, longitude, altim);
-}
-
 class LogProfileView extends StatefulWidget {
   final Log4ListWidget logItem;
 
@@ -314,18 +301,15 @@ class _LogProfileViewState extends State<LogProfileView> with AfterLayoutMixin {
   List<Marker> staticMarkers = [];
   bool _showStats = true;
 
-  ErrorTileCallBack? errorTileCallback = (Tile tile, dynamic exception) {
+  ErrorTileCallBack? errorTileCallback = (tile, exception, stacktrace) {
     // ignore tiles that can't load to avoid
-    SMLogger().e("Unable to load tile: ${tile.coordsKey}", exception, null);
+    SMLogger().e("Unable to load tile: ${tile.coordinates}", null, null);
   };
   bool overrideTilesOnUrlChange = true;
 
   @override
   void initState() {
     super.initState();
-    mapController.onReady.then((v) {
-      loadData(context);
-    });
   }
 
   void loadData(BuildContext context) {
@@ -338,18 +322,19 @@ class _LogProfileViewState extends State<LogProfileView> with AfterLayoutMixin {
     var maxSpeedLL;
     var maxSpeed = double.negativeInfinity;
     logDataPoints.forEach((p) {
-      LatLng llTmp;
+      Coordinate llTmp;
       if (useGpsFilteredGenerally && p.filtered_accuracy != null) {
-        llTmp = LatLng(p.filtered_lat!, p.filtered_lon!);
+        llTmp = Coordinate.fromYX(p.filtered_lat!, p.filtered_lon!);
       } else {
-        llTmp = LatLng(p.lat, p.lon);
+        llTmp = Coordinate.fromYX(p.lat, p.lon);
       }
       LatLngExt llExt;
       if (prevll == null) {
-        llExt = LatLngExt(llTmp.latitude, llTmp.longitude, p.altim!, 0, 0,
-            p.ts!, p.accuracy ?? -1);
+        llExt = LatLngExt(
+            llTmp.y, llTmp.x, p.altim!, 0, 0, p.ts!, p.accuracy ?? -1);
       } else {
-        var distanceMeters = CoordinateUtilities.getDistance(prevll!, llTmp);
+        var distanceMeters = CoordinateUtilities.getDistance(
+            Coordinate(prevll!.longitude, prevll!.latitude), llTmp);
         progressiveMeters += distanceMeters;
         var deltaTs = (p.ts! - prevll!.ts) / 1000;
         var speedMS = distanceMeters / deltaTs;
@@ -379,7 +364,7 @@ class _LogProfileViewState extends State<LogProfileView> with AfterLayoutMixin {
     var maxElev = double.negativeInfinity;
 
     Envelope env = Envelope.empty();
-    LatLng? prevll2 = null;
+    Coordinate? prevll2 = null;
     progressiveMeters = 0;
     logDataPoints.forEach((point) {
       var lat = point.lat;
@@ -388,12 +373,12 @@ class _LogProfileViewState extends State<LogProfileView> with AfterLayoutMixin {
       if (halfTimeLL == null && point.ts! > halfTime) {
         halfTimeLL = LatLng(lat, lon);
       }
-      var llTmp = LatLng(lat, lon);
+      var llTmp = Coordinate.fromYX(lat, lon);
       if (prevll2 != null) {
         var distanceMeters = CoordinateUtilities.getDistance(prevll2!, llTmp);
         progressiveMeters += distanceMeters;
         if (halfLengthLL == null && progressiveMeters >= halfLength) {
-          halfLengthLL = llTmp;
+          halfLengthLL = LatLng(llTmp.y, llTmp.x);
         }
       }
       prevll2 = llTmp;
@@ -501,7 +486,7 @@ class _LogProfileViewState extends State<LogProfileView> with AfterLayoutMixin {
           StringUtilities.formatDurationMillis(currentTouchMillis);
     }
 
-    PolylineLayerOptions? polylines;
+    PolylineLayer? polylines;
     if (bounds != null) {
       var clrSplit =
           EnhancedColorUtility.splitEnhancedColorString(widget.logItem.color!);
@@ -511,12 +496,12 @@ class _LogProfileViewState extends State<LogProfileView> with AfterLayoutMixin {
         EnhancedColorUtility.buildPolylines(lines, points, colorTable,
             widget.logItem.width!, minLineElev, maxLineElev);
 
-        polylines = PolylineLayerOptions(
+        polylines = PolylineLayer(
           polylineCulling: true,
           polylines: lines,
         );
       } else {
-        polylines = PolylineLayerOptions(
+        polylines = PolylineLayer(
           polylineCulling: true,
           polylines: [
             Polyline(
@@ -530,14 +515,14 @@ class _LogProfileViewState extends State<LogProfileView> with AfterLayoutMixin {
       }
     }
 
-    var mapLayers = <LayerOptions>[];
+    var mapLayers = <Widget>[];
 
     if (center != null) {
       mapLayers = [
-        TileLayerOptions(
+        TileLayer(
           urlTemplate: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
           subdomains: ['a', 'b', 'c'],
-          overrideTilesWhenUrlChanges: overrideTilesOnUrlChange,
+          // TODO overrideTilesWhenUrlChanges: overrideTilesOnUrlChange,
           errorTileCallback: errorTileCallback,
         ),
       ];
@@ -545,9 +530,9 @@ class _LogProfileViewState extends State<LogProfileView> with AfterLayoutMixin {
         mapLayers.add(polylines);
       }
       if (staticMarkers.isNotEmpty && _showStats) {
-        mapLayers.add(MarkerLayerOptions(markers: staticMarkers));
+        mapLayers.add(MarkerLayer(markers: staticMarkers));
       }
-      mapLayers.add(MarkerLayerOptions(markers: markers));
+      mapLayers.add(MarkerLayer(markers: markers));
     }
     return Scaffold(
       appBar: AppBar(
@@ -583,8 +568,11 @@ class _LogProfileViewState extends State<LogProfileView> with AfterLayoutMixin {
           options: new MapOptions(
             // center: center,
             zoom: 11.0,
+            onMapReady: () {
+              loadData(context);
+            },
           ),
-          layers: mapLayers,
+          children: mapLayers,
         ),
         hoverPoint != null
             ? Positioned(
@@ -624,7 +612,7 @@ class _LogProfileViewState extends State<LogProfileView> with AfterLayoutMixin {
                               "${SL.of(context).logProperties_speed} ${hoverPoint!.speed.toStringAsFixed(0)} m/s (${(hoverPoint!.speed * 3.6).toStringAsFixed(0)} km/h)"), //Speed:
                         ),
                         SmashUI.normalText(
-                            "${SL.of(context).logProperties_elevation} ${hoverPoint!.altitude.toInt()}m"), //Elevation:
+                            "${SL.of(context).logProperties_elevation} ${hoverPoint!.altim.toInt()}m"), //Elevation:
                       ],
                     ),
                   ),

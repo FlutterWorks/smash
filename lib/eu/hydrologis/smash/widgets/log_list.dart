@@ -10,15 +10,13 @@ import 'package:dart_hydrologis_utils/dart_hydrologis_utils.dart';
 import 'package:dart_jts/dart_jts.dart' hide Orientation;
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
-import 'package:latlong2/latlong.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:smash/eu/hydrologis/smash/gps/gps.dart';
-import 'package:smash/eu/hydrologis/smash/models/map_state.dart';
 import 'package:smash/eu/hydrologis/smash/models/project_state.dart';
 import 'package:smash/eu/hydrologis/smash/project/project_database.dart';
-import 'package:smash/eu/hydrologis/smash/util/elevcolor.dart';
 import 'package:smash/eu/hydrologis/smash/widgets/log_properties.dart';
+import 'package:smash/eu/hydrologis/smash/widgets/settings.dart';
 import 'package:smash/generated/l10n.dart';
 import 'package:smash_import_export_plugins/smash_import_export_plugins.dart';
 import 'package:smashlibs/com/hydrologis/flutterlibs/utils/logging.dart';
@@ -122,6 +120,12 @@ class LogListWidgetState extends State<LogListWidget> with AfterLayoutMixin {
         appBar: AppBar(
           title: Text(SL.of(context).logList_gpsLogsList), //"GPS Logs list"
           actions: <Widget>[
+            IconButton(
+                onPressed: () => showSettings(context),
+                icon: Icon(
+                  MdiIcons.cog,
+                  color: SmashColors.mainBackground,
+                )),
             PopupMenuButton<int>(
               onSelected: (value) async {
                 if (value == 1) {
@@ -199,6 +203,18 @@ class LogListWidgetState extends State<LogListWidget> with AfterLayoutMixin {
                 }),
       ),
     );
+  }
+
+  Future<void> showSettings(BuildContext context) async {
+    Dialog settingsDialog = Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
+      child: Padding(
+        padding: const EdgeInsets.only(top: 8.0, bottom: 8.0),
+        child: GpsLogsSetting(),
+      ),
+    );
+    await showDialog(
+        context: context, builder: (BuildContext context) => settingsDialog);
   }
 }
 
@@ -521,11 +537,12 @@ class _LogInfoState extends State<LogInfo> with AfterLayoutMixin {
       double distance;
       if (widget.useGpsFilteredGenerally && ldp1.filtered_lat != null) {
         distance = CoordinateUtilities.getDistance(
-            LatLng(ldp1.filtered_lat!, ldp1.filtered_lon!),
-            LatLng(ldp2.filtered_lat!, ldp2.filtered_lon!));
+            Coordinate.fromYX(ldp1.filtered_lat!, ldp1.filtered_lon!),
+            Coordinate.fromYX(ldp2.filtered_lat!, ldp2.filtered_lon!));
       } else {
         distance = CoordinateUtilities.getDistance(
-            LatLng(ldp1.lat, ldp1.lon), LatLng(ldp2.lat, ldp2.lon));
+            Coordinate.fromYX(ldp1.lat, ldp1.lon),
+            Coordinate.fromYX(ldp2.lat, ldp2.lon));
       }
       length += distance;
 

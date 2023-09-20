@@ -8,9 +8,6 @@ import 'package:flutter_map/plugin_api.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:smash/eu/hydrologis/smash/l10n/localization.dart';
-import 'package:smash/eu/hydrologis/smash/maps/layers/core/layersource.dart';
-import 'package:smash/eu/hydrologis/smash/maps/layers/types/tiles.dart';
-import 'package:smash/eu/hydrologis/smash/maps/layers/types/wms.dart';
 import 'package:smash/generated/l10n.dart';
 import 'package:smashlibs/smashlibs.dart';
 
@@ -368,7 +365,7 @@ class _OnlineSourceCardState extends State<OnlineSourceCard> {
                         center: new LatLng(lat, lon),
                         zoom: zoom,
                       ),
-                      layers: widget.layers,
+                      children: widget.layers,
                     ),
                   )
                 ],
@@ -488,7 +485,7 @@ class _AddTmsStepperState extends State<AddTmsStepper> with Localization {
               initialValue: tmsData.name,
               decoration: InputDecoration(
                 labelText: loc.onlineSourcesPage_enterName, //"enter name"
-                icon: const Icon(MdiIcons.text),
+                icon: Icon(MdiIcons.text),
               ),
               keyboardType: TextInputType.text,
               autocorrect: false,
@@ -536,7 +533,7 @@ class _AddTmsStepperState extends State<AddTmsStepper> with Localization {
               },
               decoration: InputDecoration(
                 labelText: loc.onlineSourcesPage_enterUrl, //"enter URL"
-                icon: const Icon(MdiIcons.link),
+                icon: Icon(MdiIcons.link),
               ),
             ),
             TextFormField(
@@ -547,7 +544,7 @@ class _AddTmsStepperState extends State<AddTmsStepper> with Localization {
                 if (value != null) tmsData.subdomains = value;
               },
               decoration: InputDecoration(
-                icon: const Icon(MdiIcons.fileTree),
+                icon: Icon(MdiIcons.fileTree),
                 labelText:
                     loc.onlineSourcesPage_enterSubDomains, //"enter subdomains"
               ),
@@ -572,7 +569,7 @@ class _AddTmsStepperState extends State<AddTmsStepper> with Localization {
               decoration: InputDecoration(
                 labelText: loc
                     .onlineSourcesPage_enterAttribution, //"enter attribution"
-                icon: const Icon(MdiIcons.license),
+                icon: Icon(MdiIcons.license),
               ),
             ),
           ],
@@ -810,7 +807,7 @@ class _AddWmsStepperState extends State<AddWmsStepper> with Localization {
               },
               decoration: InputDecoration(
                 labelText: loc.onlineSourcesPage_enterUrl, //"enter URL"
-                icon: const Icon(MdiIcons.link),
+                icon: Icon(MdiIcons.link),
               ),
             ),
           ],
@@ -828,7 +825,7 @@ class _AddWmsStepperState extends State<AddWmsStepper> with Localization {
               decoration: InputDecoration(
                 labelText: loc
                     .onlineSourcesPage_enterLayerToLoad, //"enter layer to load"
-                icon: const Icon(MdiIcons.text),
+                icon: Icon(MdiIcons.text),
               ),
               keyboardType: TextInputType.text,
               autocorrect: false,
@@ -909,7 +906,7 @@ class _AddWmsStepperState extends State<AddWmsStepper> with Localization {
               decoration: InputDecoration(
                 labelText: loc
                     .onlineSourcesPage_enterAttribution, //"enter attribution"
-                icon: const Icon(MdiIcons.license),
+                icon: Icon(MdiIcons.license),
               ),
             ),
           ],

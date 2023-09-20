@@ -6,7 +6,6 @@
 
 import 'dart:io';
 
-import 'package:after_layout/after_layout.dart';
 import 'package:dart_hydrologis_db/dart_hydrologis_db.dart';
 import 'package:dart_hydrologis_utils/dart_hydrologis_utils.dart' as HU;
 import 'package:flutter/material.dart';
@@ -14,32 +13,11 @@ import 'package:flutter_map/plugin_api.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:smash/eu/hydrologis/smash/gps/filters.dart';
-import 'package:smash/eu/hydrologis/smash/gps/gps.dart';
 import 'package:smash/eu/hydrologis/smash/gps/testlog.dart';
-import 'package:smash/eu/hydrologis/smash/maps/plugins/center_cross_plugin.dart';
-import 'package:smash/eu/hydrologis/smash/maps/plugins/pluginshandler.dart';
-import 'package:smash/eu/hydrologis/smash/models/mapbuilder.dart';
 import 'package:smash/eu/hydrologis/smash/models/project_state.dart';
 import 'package:smash/generated/l10n.dart';
 import 'package:smashlibs/com/hydrologis/flutterlibs/utils/logging.dart';
 import 'package:smashlibs/smashlibs.dart';
-
-const SETTINGS_KEY_EDIT_HANLDE_ICON_SIZE = 'SETTINGS_KEY_EDIT_HANLDE_ICON_SIZE';
-const SETTINGS_KEY_EDIT_HANLDEINTERMEDIATE_ICON_SIZE =
-    'SETTINGS_KEY_EDIT_HANLDEINTERMEDIATE_ICON_SIZE';
-const SETTINGS_EDIT_HANLDE_ICON_SIZES = [
-  10,
-  15,
-  20,
-  25,
-  30,
-  35,
-  40,
-  50,
-  60,
-  80,
-  100
-];
 
 class SettingsWidget extends StatefulWidget {
   SettingsWidget({Key? key}) : super(key: key);
@@ -683,7 +661,7 @@ class GpsSettingsState extends State<GpsSettings> {
                 .settings_noPointAvailableYet); //"No point available yet."
       }
 
-      var layer = new MarkerLayerOptions(
+      var layer = new MarkerLayer(
         markers: gpsInfoList.map((msg) {
           var clr = Colors.red.withAlpha(100);
           if (msg == gpsInfoList.first) {
@@ -693,7 +671,7 @@ class GpsSettingsState extends State<GpsSettings> {
           return new Marker(
             width: 10,
             height: 10,
-            point: msg.newPosLatLon!,
+            point: LatLngExt.fromCoordinate(msg.newPosLatLon!),
             builder: (ctx) => new Stack(
               children: <Widget>[
                 Center(
@@ -713,12 +691,12 @@ class GpsSettingsState extends State<GpsSettings> {
         children: <Widget>[
           FlutterMap(
             options: new MapOptions(
-              center: gpsInfoList.last.newPosLatLon,
+              center: LatLngExt.fromCoordinate(gpsInfoList.last.newPosLatLon!),
               zoom: 19,
               minZoom: 7,
               maxZoom: 21,
             ),
-            layers: [layer],
+            children: [layer],
             mapController: _mapController,
           ),
           Column(
@@ -731,9 +709,9 @@ class GpsSettingsState extends State<GpsSettings> {
                     int i = gpsInfoListCounter[index];
                     var infoMap = {
                       SL.of(context).settings_longitudeDeg: //"longitude [deg]"
-                          msg.newPosLatLon!.longitude.toStringAsFixed(6),
+                          msg.newPosLatLon!.x.toStringAsFixed(6),
                       SL.of(context).settings_latitudeDeg: //"latitude [deg]"
-                          msg.newPosLatLon!.latitude.toStringAsFixed(6),
+                          msg.newPosLatLon!.y.toStringAsFixed(6),
                       SL.of(context).settings_accuracyM: //"accuracy [m]"
                           msg.accuracy!.toStringAsFixed(0),
                       SL.of(context).settings_altitudeM: //"altitude [m]"
@@ -909,7 +887,10 @@ class GpsSettingsState extends State<GpsSettings> {
                       onPressed: () {
                         var z = _mapController.zoom + 1;
                         if (z > 21) z = 21;
-                        _mapController.move(gpsInfoList.last.newPosLatLon!, z);
+                        _mapController.move(
+                            LatLngExt.fromCoordinate(
+                                gpsInfoList.last.newPosLatLon!),
+                            z);
                       },
                     ),
                     IconButton(
@@ -921,7 +902,10 @@ class GpsSettingsState extends State<GpsSettings> {
                       onPressed: () {
                         var z = _mapController.zoom - 1;
                         if (z < 7) z = 7;
-                        _mapController.move(gpsInfoList.last.newPosLatLon!, z);
+                        _mapController.move(
+                            LatLngExt.fromCoordinate(
+                                gpsInfoList.last.newPosLatLon!),
+                            z);
                       },
                     ),
                     Spacer(
@@ -1551,11 +1535,11 @@ class VectorLayerSettingsState extends State<VectorLayerSettings> {
     int tapAreaPixels = GpPreferences()
             .getIntSync(SmashPreferencesKeys.KEY_VECTOR_TAPAREA_SIZE, 50) ??
         50;
-    int handleIconSize =
-        GpPreferences().getIntSync(SETTINGS_KEY_EDIT_HANLDE_ICON_SIZE, 25) ??
-            25;
-    int intermediateHandleIconSize = GpPreferences()
-            .getIntSync(SETTINGS_KEY_EDIT_HANLDEINTERMEDIATE_ICON_SIZE, 20) ??
+    int handleIconSize = GpPreferences()
+            .getIntSync(SLSettings.SETTINGS_KEY_EDIT_HANLDE_ICON_SIZE, 25) ??
+        25;
+    int intermediateHandleIconSize = GpPreferences().getIntSync(
+            SLSettings.SETTINGS_KEY_EDIT_HANLDEINTERMEDIATE_ICON_SIZE, 20) ??
         20;
 
     return Scaffold(
@@ -1726,7 +1710,8 @@ class VectorLayerSettingsState extends State<VectorLayerSettings> {
                         DropdownButton<int>(
                           value: handleIconSize,
                           isExpanded: true,
-                          items: SETTINGS_EDIT_HANLDE_ICON_SIZES.map((i) {
+                          items: SLSettings.SETTINGS_EDIT_HANLDE_ICON_SIZES
+                              .map((i) {
                             return DropdownMenuItem<int>(
                               child: Text(
                                 "$i px",
@@ -1737,7 +1722,8 @@ class VectorLayerSettingsState extends State<VectorLayerSettings> {
                           }).toList(),
                           onChanged: (selected) async {
                             await GpPreferences().setInt(
-                                SETTINGS_KEY_EDIT_HANLDE_ICON_SIZE, selected!);
+                                SLSettings.SETTINGS_KEY_EDIT_HANLDE_ICON_SIZE,
+                                selected!);
                             setState(() {});
                           },
                         ),
@@ -1754,7 +1740,8 @@ class VectorLayerSettingsState extends State<VectorLayerSettings> {
                         DropdownButton<int>(
                           value: intermediateHandleIconSize,
                           isExpanded: true,
-                          items: SETTINGS_EDIT_HANLDE_ICON_SIZES.map((i) {
+                          items: SLSettings.SETTINGS_EDIT_HANLDE_ICON_SIZES
+                              .map((i) {
                             return DropdownMenuItem<int>(
                               child: Text(
                                 "$i px",
@@ -1765,7 +1752,8 @@ class VectorLayerSettingsState extends State<VectorLayerSettings> {
                           }).toList(),
                           onChanged: (selected) async {
                             await GpPreferences().setInt(
-                                SETTINGS_KEY_EDIT_HANLDEINTERMEDIATE_ICON_SIZE,
+                                SLSettings
+                                    .SETTINGS_KEY_EDIT_HANLDEINTERMEDIATE_ICON_SIZE,
                                 selected!);
                             setState(() {});
                           },

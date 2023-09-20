@@ -4,21 +4,18 @@
  * found in the LICENSE file.
  */
 
-import 'package:dart_hydrologis_db/dart_hydrologis_db.dart';
 import 'package:dart_hydrologis_utils/dart_hydrologis_utils.dart';
+import 'package:dart_jts/dart_jts.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
-import 'package:latlong2/latlong.dart';
 import 'package:path/path.dart';
 import 'package:provider/provider.dart';
 import 'package:smash/eu/hydrologis/smash/gps/gps.dart';
-
-import 'package:smash/eu/hydrologis/smash/models/mapbuilder.dart';
 import 'package:smash/eu/hydrologis/smash/project/data_loader.dart';
 import 'package:smash/eu/hydrologis/smash/project/project_database.dart';
-
 import 'package:smashlibs/com/hydrologis/flutterlibs/utils/logging.dart';
 import 'package:smashlibs/smashlibs.dart';
+import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
 
 /// The provider object of the current project status
 ///
@@ -40,14 +37,14 @@ class ProjectState extends ChangeNotifierPlus {
   bool _isLogging = false;
   int? _currentLogId;
 
-  List<LatLng> _currentLogPoints = [];
+  List<Coordinate> _currentLogPoints = [];
   double? _currentLogProgressive;
   double? _currentFilteredLogProgressive;
   int? _currentLogTimeDeltaMillis;
   int? _currentLogTimeInitMillis;
   double? _currentSpeedInMs;
   List<dynamic> _lastProgAndAltitudes = [];
-  List<LatLng> _currentFilteredLogPoints = [];
+  List<Coordinate> _currentFilteredLogPoints = [];
   GpsStatus? _lastGpsStatusBeforeLogging;
 
   Future<void> setNewProject(String path, BuildContext context) async {
@@ -123,7 +120,36 @@ class ProjectState extends ChangeNotifierPlus {
         SmashPreferencesKeys.NOTESVIEWMODES[0];
     DataLoaderUtilities.loadNotesMarkers(
         projectDb!, tmpList, mapBuilder, notesMode);
-    tmp.geopapMarkers = tmpList;
+
+    var markerCluster = MarkerClusterLayerWidget(
+      key: ValueKey("SMASH_NOTES_MARKERCLUSTER"),
+      options: MarkerClusterLayerOptions(
+        zoomToBoundsOnClick: false,
+        // spiderfyCircleRadius: 150,
+        disableClusteringAtZoom: 16,
+        maxClusterRadius: 80,
+        //        height: 40,
+        //        width: 40,
+        fitBoundsOptions: FitBoundsOptions(
+          padding: EdgeInsets.all(180),
+        ),
+        markers: tmpList,
+        polygonOptions: PolygonOptions(
+            borderColor: SmashColors.mainDecorationsDarker,
+            color: SmashColors.mainDecorations.withOpacity(0.2),
+            borderStrokeWidth: 3),
+        builder: (context, markers) {
+          return FloatingActionButton(
+            child: Text(markers.length.toString()),
+            onPressed: null,
+            backgroundColor: SmashColors.mainDecorationsDarker,
+            foregroundColor: SmashColors.mainBackground,
+            heroTag: null,
+          );
+        },
+      ),
+    );
+    tmp.geopapMarkers = markerCluster;
 
     List<String> currentLogViewModes = GpPreferences().getStringListSync(
             SmashPreferencesKeys.KEY_GPS_LOG_VIEW_MODE, [
@@ -179,7 +205,7 @@ class ProjectState extends ChangeNotifierPlus {
       _currentFilteredLogProgressive = 0.0;
     }
     // original log
-    var newPosLatLon = LatLng(latitude, longitude);
+    var newPosLatLon = Coordinate.fromYX(latitude, longitude);
     if (_currentLogPoints.isNotEmpty) {
       var distanceMeters =
           CoordinateUtilities.getDistance(_currentLogPoints.last, newPosLatLon);
@@ -189,7 +215,8 @@ class ProjectState extends ChangeNotifierPlus {
 
     // filtered log
     if (latitudeFiltered != null) {
-      var newFilteredPosLatLon = LatLng(latitudeFiltered, longitudeFiltered!);
+      var newFilteredPosLatLon =
+          Coordinate.fromYX(latitudeFiltered, longitudeFiltered!);
       if (_currentFilteredLogPoints.isNotEmpty) {
         var distanceMeters = CoordinateUtilities.getDistance(
             _currentFilteredLogPoints.last, newFilteredPosLatLon);
@@ -274,8 +301,8 @@ class ProjectState extends ChangeNotifierPlus {
   }
 
   /// Get the list of current log points.
-  List<LatLng> get currentLogPoints => _currentLogPoints;
-  List<LatLng> get currentFilteredLogPoints => _currentFilteredLogPoints;
+  List<Coordinate> get currentLogPoints => _currentLogPoints;
+  List<Coordinate> get currentFilteredLogPoints => _currentFilteredLogPoints;
 
   /// Stop logging to database.
   ///
@@ -306,6 +333,6 @@ class ProjectData {
   int? simpleNotesCount;
   int? logsCount;
   int? formNotesCount;
-  List<Marker>? geopapMarkers;
-  PolylineLayerOptions? geopapLogs;
+  MarkerClusterLayerWidget? geopapMarkers;
+  PolylineLayer? geopapLogs;
 }

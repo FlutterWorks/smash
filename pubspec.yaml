@@ -18,13 +18,13 @@ environment:
 dependencies:
   flutter_localizations:
     sdk: flutter
-  intl: '>=0.16.1 <=0.18.0'
+  intl: '>=0.16.1'
 
   ##################################
   # OWN
   ##################################
   # apache 2
-  geoimage: ^0.2.0
+  geoimage: ^0.4.0
 
   smashlibs:
     path: ./smashlibs/
@@ -39,50 +39,45 @@ dependencies:
     #   ref: "0765081"
 
 
-  dart_shp: ^1.0.1
+  dart_shp: ^1.1.0
 
-  dart_hydrologis_utils: ^0.6.1
+  dart_hydrologis_utils: ^0.8.1
     # path: ../dart_hydrologis_utils/
-  dart_jts: ^0.2.2
+  dart_jts: ^0.2.3
     # path: ../dart_jts/
 
 
 
-  dart_hydrologis_db: ^1.0.1
+  dart_hydrologis_db: ^1.1.0
   # path: ../dart_hydrologis_db/
   # git:
   #  url: https://github.com/moovida/dart_hydrologis_db.git
 
   # apache 2
-  flutter_geopackage: ^0.6.1
+  flutter_geopackage: ^0.6.3
   # path: ../flutter_geopackage/
   #  git:
   #    url: https://github.com/moovida/flutter_geopackage.git
   
-  dart_postgis: ^0.3.1
+  dart_postgis: ^0.3.2
     # path: /home/hydrologis/development/SMASH/dart_postgis/
   # git:
   #   url: https://github.com/moovida/dart_postgis
+  
   ##################################
   # OTHERS MAPS RELATED
   ##################################
   # MIT
   # this also pulls flutter_map_dragmarker
-  flutter_map_line_editor: ^3.0.0
+  flutter_map_line_editor: ^4.1.0
 
   # BSD
-  flutter_map: ^2.2.0
+  flutter_map: ^4.0.0
 
-  flutter_map_marker_cluster: ^0.5.4
-
-  # GPL 3.0 -> not maintained anymore
-  map_elevation: ^2.0.0
-    # git:
-    #   url: https://github.com/moovida/map_elevation.git
-    #   ref: fix_latlng_lib
+  flutter_map_marker_cluster: ^1.1.1
 
   # MIT
-  lat_lon_grid_plugin: ^0.2.3
+  lat_lon_grid_plugin: ^0.2.6
     # git:
     #   url: https://github.com/moovida/lat_lon_grid_plugin.git
     #   ref: bump_flutter_map_to_1
@@ -113,11 +108,15 @@ dependencies:
   # MIT
   sqlite3_flutter_libs: ^0.5.9
 
-  # MIT
-  positioned_tap_detector_2: ^1.0.4
+  # # MIT
+  # positioned_tap_detector_2: ^1.0.4
 
   #MIT
-  extended_image: ^8.0.1
+  # extended_image: ^8.0.2
+  extended_image:
+    git:
+      url: https://github.com/laiiihz/extended_image
+      ref: migrate-to-3.13
     # git:
     #   url: https://github.com/moovida/extended_image
 
@@ -211,7 +210,7 @@ dependencies:
 
 dev_dependencies:
   # MIT
-  flutter_launcher_icons: ^0.10.0
+  flutter_launcher_icons: ^0.13.1
     # git:
     #   url: https://github.com/moovida/flutter_launcher_icons.git
 

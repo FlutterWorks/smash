@@ -10,28 +10,24 @@ import 'dart:math';
 
 import 'package:dart_hydrologis_db/dart_hydrologis_db.dart';
 import 'package:dart_hydrologis_utils/dart_hydrologis_utils.dart';
+import 'package:dart_jts/dart_jts.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:map_elevation/map_elevation.dart';
 import 'package:provider/provider.dart';
 import 'package:smash/eu/hydrologis/smash/forms/form_smash_utils.dart';
 import 'package:smash/eu/hydrologis/smash/gps/gps.dart';
-import 'package:smash/eu/hydrologis/smash/mainview_utils.dart';
-import 'package:smash/eu/hydrologis/smash/models/mapbuilder.dart';
 import 'package:smash/eu/hydrologis/smash/models/project_state.dart';
 import 'package:smash/eu/hydrologis/smash/project/images.dart';
 import 'package:smash/eu/hydrologis/smash/project/project_database.dart';
-import 'package:smash/eu/hydrologis/smash/util/elevcolor.dart';
 import 'package:smash/eu/hydrologis/smash/util/urls.dart';
-import 'package:smash/eu/hydrologis/smash/widgets/log_properties.dart';
 import 'package:smash/eu/hydrologis/smash/widgets/note_properties.dart';
 import 'package:smash/generated/l10n.dart';
 import 'package:smashlibs/smashlibs.dart';
 
 class DataLoaderUtilities {
   static Note addNote(
-      SmashMapBuilder mapBuilder, int doInGpsMode, MapController mapController,
+      SmashMapBuilder mapBuilder, int doInGpsMode, Coordinate center,
       {String? form, String? iconName, String? color, String? text}) {
     int ts = DateTime.now().millisecondsSinceEpoch;
     SmashPosition? pos;
@@ -52,9 +48,8 @@ class DataLoaderUtilities {
         altim = pos.altitude;
       }
     } else {
-      var center = mapController.center;
-      lon = center.longitude;
-      lat = center.latitude;
+      lon = center.x;
+      lat = center.y;
       altim = -1;
     }
     Note note = Note()
@@ -146,8 +141,7 @@ class DataLoaderUtilities {
                     if (imageId != null) {
                       ProjectState projectState =
                           Provider.of<ProjectState>(context, listen: false);
-                      if (projectState != null)
-                        projectState.reloadProject(context);
+                      projectState.reloadProject(context);
 //                } else {
 //                  showWarningDialog(
 //                      context, "Could not save image in database.");
@@ -192,7 +186,7 @@ class DataLoaderUtilities {
               iconData,
               iconColor,
               noteExt.size,
-              text!,
+              text,
               SmashColors.mainTextColorNeutral,
               iconColor.withAlpha(80),
             ),
@@ -588,8 +582,8 @@ class DataLoaderUtilities {
     });
   }
 
-  static PolylineLayerOptions loadLogLinesLayer(GeopaparazziProjectDb db,
-      bool doOrig, bool doFiltered, bool doOrigTransp, bool doFilteredTransp) {
+  static PolylineLayer loadLogLinesLayer(GeopaparazziProjectDb db, bool doOrig,
+      bool doFiltered, bool doOrigTransp, bool doFilteredTransp) {
     String logsQuery = '''
         select l.$LOGS_COLUMN_ID, p.$LOGSPROP_COLUMN_COLOR, p.$LOGSPROP_COLUMN_WIDTH 
         from $TABLE_GPSLOGS l, $TABLE_GPSLOG_PROPERTIES p 
@@ -615,8 +609,8 @@ class DataLoaderUtilities {
     var resLogData = db.select(logDataQuery);
     var rangeMap = <int, List<double>>{};
     var prevTs;
-    var prevLatLng;
-    var prevLatLngFiltered;
+    LatLngExt? prevLatLng;
+    LatLngExt? prevLatLngFiltered;
     resLogData.forEach((QueryResultRow map) {
       var logid = map.get(LOGSDATA_COLUMN_LOGID);
       var log = logs[logid];
@@ -639,8 +633,8 @@ class DataLoaderUtilities {
           var lon = map.get(LOGSDATA_COLUMN_LON);
           var speed = 0.0;
           if (prevTs != null) {
-            var distanceMeters =
-                CoordinateUtilities.getDistance(LatLng(lat, lon), prevLatLng);
+            var distanceMeters = CoordinateUtilities.getDistance(
+                Coordinate.fromYX(lat, lon), prevLatLng!.toCoordinate());
             var deltaTs = (ts - prevTs) / 1000;
             speed = distanceMeters / deltaTs;
           }
@@ -655,7 +649,8 @@ class DataLoaderUtilities {
           var speed = 0.0;
           if (prevTs != null) {
             var distanceMeters = CoordinateUtilities.getDistance(
-                LatLng(latF, lonF), prevLatLngFiltered);
+                Coordinate.fromYX(latF, lonF),
+                prevLatLngFiltered!.toCoordinate());
             var deltaTs = (ts - prevTs) / 1000;
             speed = distanceMeters / deltaTs;
           }
@@ -673,7 +668,7 @@ class DataLoaderUtilities {
       logs.forEach((logId, list) {
         var color = list[0];
         var width = list[1];
-        List<ElevationPoint> points = list[2];
+        List<LatLngExt> points = list[2];
 
         var colorElev = EnhancedColorUtility.splitEnhancedColorString(color);
         var colString = colorElev[0];
@@ -720,7 +715,8 @@ class DataLoaderUtilities {
       });
     }
 
-    return PolylineLayerOptions(
+    return PolylineLayer(
+      key: ValueKey("SMASH_LOG_LINES"),
       polylineCulling: true,
       polylines: lines,
     );

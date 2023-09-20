@@ -13,7 +13,6 @@ import 'package:material_design_icons_flutter/material_design_icons_flutter.dart
 import 'package:provider/provider.dart';
 import 'package:smash/eu/hydrologis/smash/gps/gps.dart';
 import 'package:smash/eu/hydrologis/smash/mainview_utils.dart';
-import 'package:smash/eu/hydrologis/smash/models/map_state.dart';
 import 'package:smash/generated/l10n.dart';
 import 'package:smashlibs/smashlibs.dart';
 
@@ -64,11 +63,6 @@ class _GpsInfoButtonState extends State<GpsInfoButton> {
             ),
             duration: Duration(seconds: 15),
           ));
-        },
-        onDoubleTap: () {
-          var mapState = Provider.of<SmashMapState>(context, listen: false);
-          mapState.centerOnGps = !mapState.centerOnGps;
-          setState(() {});
         },
         child: SizedBox(
           height: widget._iconSize * 1.3,
@@ -131,6 +125,7 @@ class _GpsInfoButtonState extends State<GpsInfoButton> {
 
   Widget getGpsInfoContainer(bool isLandscape) {
     var color = SmashColors.mainBackground;
+    var mapState = Provider.of<SmashMapState>(context, listen: false);
 
     return Consumer<GpsState>(builder: (context, gpsState, child) {
       Widget gpsInfo;
@@ -214,6 +209,24 @@ class _GpsInfoButtonState extends State<GpsInfoButton> {
               ),
             ),
             tableWidget,
+            Padding(
+              padding: const EdgeInsets.only(top: 8.0),
+              child: IconButton(
+                onPressed: () {
+                  var mapState =
+                      Provider.of<SmashMapState>(context, listen: false);
+                  mapState.centerOnGps = !mapState.centerOnGps;
+                  setState(() {});
+                },
+                icon: Icon(
+                  mapState.centerOnGps ? MdiIcons.magnetOn : MdiIcons.magnet,
+                  size: 32,
+                ),
+                color: mapState.centerOnGps
+                    ? SmashColors.mainSelection
+                    : SmashColors.mainBackground,
+              ),
+            ),
           ],
         );
       } else {

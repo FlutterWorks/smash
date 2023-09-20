@@ -59,19 +59,6 @@ class _LoggingButtonState extends State<LoggingButton> {
                   builder: (context) =>
                       LogListWidget(projectState.projectDb!)));
         },
-        onDoubleTap: () async {
-          Dialog settingsDialog = Dialog(
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12.0)),
-            child: Padding(
-              padding: const EdgeInsets.only(top: 8.0, bottom: 8.0),
-              child: GpsLogsSetting(),
-            ),
-          );
-          await showDialog(
-              context: context,
-              builder: (BuildContext context) => settingsDialog);
-        },
       );
     });
   }

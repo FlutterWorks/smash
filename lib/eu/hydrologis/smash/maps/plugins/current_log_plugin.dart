@@ -3,67 +3,42 @@
  * Use of this source code is governed by a GPL3 license that can be
  * found in the LICENSE file.
  */
-import 'dart:async';
-import 'dart:math';
-
 import 'package:dart_hydrologis_utils/dart_hydrologis_utils.dart'
     hide TextStyle;
+import 'package:dart_jts/dart_jts.dart';
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map/plugin_api.dart';
-import 'package:latlong2/latlong.dart' hide Path;
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:smash/eu/hydrologis/smash/models/project_state.dart';
+import 'package:smash/eu/hydrologis/smash/widgets/log_properties.dart';
 import 'package:smashlibs/smashlibs.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
-import 'package:fl_chart/fl_chart.dart';
 
 /// Plugin to show the current GPS log
-class CurrentGpsLogPlugin implements MapPlugin {
-  @override
-  Widget createLayer(
-      LayerOptions options, MapState mapState, Stream<void> stream) {
-    if (options is CurrentGpsLogPluginOption) {
-      return CurrentGpsLogLayer(options, mapState, stream);
-    }
-    throw Exception('Unknown options type for CurrentGpsLogPlugin: $options');
-  }
-
-  @override
-  bool supportsLayer(LayerOptions options) {
-    return options is CurrentGpsLogPluginOption;
-  }
-}
-
-class CurrentGpsLogPluginOption extends LayerOptions {
-  Color logColor;
-  double logWidth;
-
-  CurrentGpsLogPluginOption({
-    this.logColor = Colors.red,
-    this.logWidth = 4,
-  });
-}
-
 class CurrentGpsLogLayer extends StatelessWidget {
-  final CurrentGpsLogPluginOption currentGpsLogLayerOpts;
-  final ValueNotifier panelExpandedValue = ValueNotifier(true);
-  final MapState map;
-  final Stream<void> stream;
+  // 0 = large, 1 = medium, 2 = small
+  final ValueNotifier panelExpandedValue = ValueNotifier(1);
   Paint? logPaint;
   Paint? filteredLogPaint;
-  bool doOrig = true;
   bool doFiltered = true;
   // defines if to flatten the chart to have more realistic ratio
   bool _doFlatChart = true;
+  bool doOrig = true;
 
-  CurrentGpsLogLayer(this.currentGpsLogLayerOpts, this.map, this.stream) {
-    /// The log view modes [originalData, filteredData].
-  }
+  final Color logColor;
+  final double logWidth;
+  CurrentGpsLogLayer({
+    this.logColor = Colors.red,
+    this.logWidth = 4,
+  }) : super(key: ValueKey("SMASH_CURRENTGPSLOGLAYER"));
+
+  /// The log view modes [originalData, filteredData].
 
   @override
   Widget build(BuildContext context) {
     return Consumer<GpsState>(builder: (context, gpsState, child) {
+      final map = FlutterMapState.maybeOf(context)!;
       ProjectState projectState =
           Provider.of<ProjectState>(context, listen: false);
 
@@ -73,10 +48,10 @@ class CurrentGpsLogLayer extends StatelessWidget {
         } else {
           logPaint = Paint()
             ..color = (gpsState.logMode == SmashPreferencesKeys.LOGVIEWMODES[1])
-                ? currentGpsLogLayerOpts.logColor
-                : currentGpsLogLayerOpts.logColor.withAlpha(100)
+                ? logColor
+                : logColor.withAlpha(100)
             ..style = PaintingStyle.stroke
-            ..strokeWidth = currentGpsLogLayerOpts.logWidth;
+            ..strokeWidth = logWidth;
         }
         if (gpsState.filteredLogMode == SmashPreferencesKeys.LOGVIEWMODES[0]) {
           doFiltered = false;
@@ -84,10 +59,18 @@ class CurrentGpsLogLayer extends StatelessWidget {
           filteredLogPaint = Paint()
             ..color = (gpsState.filteredLogMode ==
                     SmashPreferencesKeys.LOGVIEWMODES[1])
-                ? currentGpsLogLayerOpts.logColor
-                : currentGpsLogLayerOpts.logColor.withAlpha(100)
+                ? logColor
+                : logColor.withAlpha(100)
             ..style = PaintingStyle.stroke
-            ..strokeWidth = currentGpsLogLayerOpts.logWidth;
+            ..strokeWidth = logWidth;
+        }
+
+        print(panelExpandedValue.value);
+        var panel = _getInfoWidget(context, projectState, true);
+        if (panelExpandedValue.value == 1) {
+          panel = _getInfoWidget(context, projectState, false);
+        } else if (panelExpandedValue.value == 2) {
+          panel = _getTinyInfoWidget(context, projectState);
         }
 
         return Stack(
@@ -103,9 +86,7 @@ class CurrentGpsLogLayer extends StatelessWidget {
             ValueListenableBuilder(
               valueListenable: panelExpandedValue,
               builder: (context, snapshot, child) {
-                return panelExpandedValue.value
-                    ? _getInfoWidget(context, projectState)
-                    : _getTinyInfoWidget(context, projectState);
+                return panel;
               },
             ),
           ],
@@ -148,7 +129,11 @@ class CurrentGpsLogLayer extends StatelessWidget {
                       child: IconButton(
                         icon: Icon(MdiIcons.resize),
                         onPressed: () {
-                          panelExpandedValue.value = !panelExpandedValue.value;
+                          var newValue = panelExpandedValue.value + 1;
+                          if (newValue == 3) {
+                            newValue = 0;
+                          }
+                          panelExpandedValue.value = newValue;
                         },
                       ),
                     ),
@@ -162,7 +147,8 @@ class CurrentGpsLogLayer extends StatelessWidget {
     );
   }
 
-  Widget _getInfoWidget(BuildContext context, ProjectState projectState) {
+  Widget _getInfoWidget(
+      BuildContext context, ProjectState projectState, bool withChart) {
     var currentLogStats = projectState.getCurrentLogStats();
     double distanceMeter = currentLogStats[0] as double;
     double distanceMeterFiltered = currentLogStats[1] as double;
@@ -271,47 +257,52 @@ class CurrentGpsLogLayer extends StatelessWidget {
                   ],
                 ),
               ),
-              if (maxElevInt != minElevInt)
+              if (withChart && maxElevInt != minElevInt)
                 Padding(
                   padding: const EdgeInsets.only(top: 8.0),
                   child: Text("${maxElevInt + 1}",
                       style:
                           TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
                 ),
-              GestureDetector(
-                onDoubleTap: () {
-                  _doFlatChart = !_doFlatChart;
-                  String msg = "Show exagerated elev chart.";
-                  if (_doFlatChart) {
-                    msg = "Show proper ratio chart.";
-                  }
-                  final snackBar = SnackBar(
-                    content: Text(msg),
-                    behavior: SnackBarBehavior.floating,
-                  );
-                  ScaffoldMessenger.of(context).showSnackBar(snackBar);
-                },
-                child: Padding(
-                  padding: const EdgeInsets.only(right: 2.0, left: 2.0),
-                  child: SizedBox(
-                    height: 100,
-                    width: 180,
-                    child: LineChart(
-                      getProfileData(elevData, minElevInt, maxElevInt),
+              if (withChart)
+                GestureDetector(
+                  onDoubleTap: () {
+                    _doFlatChart = !_doFlatChart;
+                    String msg = "Show exagerated elev chart.";
+                    if (_doFlatChart) {
+                      msg = "Show proper ratio chart.";
+                    }
+                    final snackBar = SnackBar(
+                      content: Text(msg),
+                      behavior: SnackBarBehavior.floating,
+                    );
+                    ScaffoldMessenger.of(context).showSnackBar(snackBar);
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.only(right: 2.0, left: 2.0),
+                    child: SizedBox(
+                      height: 100,
+                      width: 180,
+                      child: LineChart(
+                        getProfileData(elevData, minElevInt, maxElevInt),
+                      ),
                     ),
                   ),
                 ),
-              ),
-              if (maxElevInt != minElevInt)
+              if (withChart && maxElevInt != minElevInt)
                 Text("${minElevInt - 1}",
                     style:
                         TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
               Padding(
-                padding: const EdgeInsets.only(top: 5.0),
-                child: IconButton(
-                  icon: Icon(MdiIcons.resize),
-                  onPressed: () {
-                    panelExpandedValue.value = !panelExpandedValue.value;
+                padding: const EdgeInsets.only(top: 8.0),
+                child: GestureDetector(
+                  child: Icon(MdiIcons.resize),
+                  onTap: () {
+                    var newValue = panelExpandedValue.value + 1;
+                    if (newValue == 3) {
+                      newValue = 0;
+                    }
+                    panelExpandedValue.value = newValue;
                   },
                 ),
               ),
@@ -394,9 +385,9 @@ class CurrentGpsLogLayer extends StatelessWidget {
 class CurrentLogPathPainter extends CustomPainter {
   Paint? logPaint;
   Paint? filtereLogPaint;
-  List<LatLng> currentLogPoints;
-  List<LatLng> currentFilteredLogPoints;
-  MapState map;
+  List<Coordinate> currentLogPoints;
+  List<Coordinate> currentFilteredLogPoints;
+  FlutterMapState map;
 
   CurrentLogPathPainter(this.logPaint, this.filtereLogPaint,
       this.currentLogPoints, this.currentFilteredLogPoints, this.map);
@@ -405,15 +396,17 @@ class CurrentLogPathPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     if (logPaint != null) {
       Path path1 = Path();
-      CustomPoint posPixel1 = map.project(currentLogPoints[0]);
-      CustomPoint pixelOrigin = map.getPixelOrigin();
+      CustomPoint posPixel1 =
+          map.project(LatLngExt.fromCoordinate(currentLogPoints[0]));
+      CustomPoint pixelOrigin = map.pixelOrigin;
       double center1X = posPixel1.x - pixelOrigin.x.toDouble();
       double center1Y = (posPixel1.y - pixelOrigin.y.toDouble());
       path1.moveTo(center1X, center1Y);
 
       for (int i = 1; i < currentLogPoints.length; i++) {
-        CustomPoint posPixel1 = map.project(currentLogPoints[i]);
-        CustomPoint pixelOrigin = map.getPixelOrigin();
+        CustomPoint posPixel1 =
+            map.project(LatLngExt.fromCoordinate(currentLogPoints[i]));
+        CustomPoint pixelOrigin = map.pixelOrigin;
         double center1X = posPixel1.x - pixelOrigin.x.toDouble();
         double center1Y = (posPixel1.y - pixelOrigin.y.toDouble());
         path1.lineTo(center1X, center1Y);
@@ -423,15 +416,17 @@ class CurrentLogPathPainter extends CustomPainter {
 
     if (filtereLogPaint != null) {
       Path path2 = Path();
-      CustomPoint posPixel2 = map.project(currentFilteredLogPoints[0]);
-      CustomPoint pixelOrigin = map.getPixelOrigin();
+      CustomPoint posPixel2 =
+          map.project(LatLngExt.fromCoordinate(currentFilteredLogPoints[0]));
+      CustomPoint pixelOrigin = map.pixelOrigin;
       double center2X = posPixel2.x - pixelOrigin.x.toDouble();
       double center2Y = (posPixel2.y - pixelOrigin.y.toDouble());
       path2.moveTo(center2X, center2Y);
 
       for (int i = 1; i < currentFilteredLogPoints.length; i++) {
-        CustomPoint posPixel2 = map.project(currentFilteredLogPoints[i]);
-        CustomPoint pixelOrigin = map.getPixelOrigin();
+        CustomPoint posPixel2 =
+            map.project(LatLngExt.fromCoordinate(currentFilteredLogPoints[i]));
+        CustomPoint pixelOrigin = map.pixelOrigin;
         double center2X = posPixel2.x - pixelOrigin.x.toDouble();
         double center2Y = (posPixel2.y - pixelOrigin.y.toDouble());
         path2.lineTo(center2X, center2Y);
