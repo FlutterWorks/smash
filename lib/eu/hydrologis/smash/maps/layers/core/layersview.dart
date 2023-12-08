@@ -5,7 +5,10 @@
  */
 
 import 'dart:core';
+import 'dart:io';
 
+import 'package:dart_hydrologis_utils/dart_hydrologis_utils.dart'
+    hide TextStyle;
 import 'package:dart_jts/dart_jts.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_geopackage/flutter_geopackage.dart';
@@ -43,6 +46,7 @@ class LayersPageState extends State<LayersPage> {
         onWillPop: () async {
           if (_somethingChanged) {
             setLayersOnChange(_layersList);
+            // Provider.of<SmashMapBuilder>(context, listen: false).reBuild();
           }
           return true;
         },
@@ -113,12 +117,18 @@ class LayersPageState extends State<LayersPage> {
                       isLoadingData = false;
                     });
                   } else if (value == 2) {
+                    setState(() {
+                      isLoadingData = true;
+                    });
+                    selectGssLayers();
+                  } else if (value == 3) {
                     openPluginsViewSettings();
                   }
                 },
                 itemBuilder: (BuildContext context) {
                   var txt1 = SL.of(context).layersView_loadRemoteDatabase;
-                  var txt2 = SL.of(context).settings_SETTING;
+                  var txt2 = SL.of(context).layersView_selectGssLayers;
+                  var txt3 = SL.of(context).settings_SETTING;
                   return [
                     PopupMenuItem<int>(
                       value: 1,
@@ -127,6 +137,10 @@ class LayersPageState extends State<LayersPage> {
                     PopupMenuItem<int>(
                       value: 2,
                       child: Text(txt2),
+                    ),
+                    PopupMenuItem<int>(
+                      value: 3,
+                      child: Text(txt3),
                     ),
                   ];
                 },
@@ -161,6 +175,87 @@ class LayersPageState extends State<LayersPage> {
     );
     await showDialog(
         context: context, builder: (BuildContext context) => settingsDialog);
+  }
+
+  Future selectGssLayers() async {
+    try {
+      var layersList = await ServerApi.getDynamicLayers();
+
+      if (layersList == null || layersList.isEmpty) {
+        SmashDialogs.showWarningDialog(
+            context, SL.of(context).layersView_noGssLayersFound);
+        return;
+      }
+
+      var layerNames = <String>[];
+      var layerName2FormDefinitionMap = <String, dynamic>{};
+      var layerName2GeometryTypeMap = <String, EGeometryType>{};
+      for (var layer in layersList) {
+        var layerName = layer["name"] as String;
+        var formDefinition = layer["form"];
+        var geometryType = layer["geometrytype"] as String;
+        layerNames.add(layerName);
+        layerName2FormDefinitionMap[layerName] = formDefinition;
+        layerName2GeometryTypeMap[layerName] =
+            EGeometryType.forWktName(geometryType);
+      }
+
+      // layersList.map((l) => l["name"] as String).toList();
+      var selectedLayerNames = await SmashDialogs.showMultiSelectionComboDialog(
+        context,
+        SL.of(context).layersView_selectGssLayersToLoad,
+        layerNames,
+      );
+
+      if (selectedLayerNames != null && selectedLayerNames.isNotEmpty) {
+        var unableToLoad = <String>[];
+        for (var selectedLayerName in selectedLayerNames) {
+          var formDefinition = layerName2FormDefinitionMap[selectedLayerName];
+          var geometryType = layerName2GeometryTypeMap[selectedLayerName];
+          if (formDefinition != null && geometryType != null) {
+            // check if file altready exists
+            var gssFolder = await GssUtilities.getGssFolder();
+            var layerFilePath = FileUtilities.joinPaths(
+                gssFolder.path, selectedLayerName + ".geojson");
+
+            if (File(layerFilePath).existsSync()) {
+              var doOverwrite = await SmashDialogs.showConfirmDialog(
+                  context,
+                  SL.of(context).layersView_layerExists +
+                      ": " +
+                      selectedLayerName,
+                  SL.of(context).layersView_layerAlreadyExists);
+              if (!doOverwrite!) {
+                continue;
+              }
+            }
+
+            String? geojsonPath = await ServerApi.downloadDynamicLayerToDevice(
+                selectedLayerName,
+                formDefinition: formDefinition,
+                geometryType: geometryType);
+            if (geojsonPath != null) {
+              var layerSource = GeojsonSource(geojsonPath);
+              // await layerSource.load(context);
+              LayerManager().addLayerSource(layerSource);
+              _somethingChanged = true;
+            } else {
+              unableToLoad.add(selectedLayerName);
+            }
+          }
+        }
+        if (unableToLoad.isNotEmpty) {
+          SmashDialogs.showWarningDialog(
+              context,
+              SL.of(context).layersView_unableToLoadGssLayers +
+                  unableToLoad.join(", "));
+        }
+      }
+    } finally {
+      setState(() {
+        isLoadingData = false;
+      });
+    }
   }
 
   Future loadSelectedFile(selectedPath, BuildContext context) async {
@@ -222,6 +317,17 @@ class LayersPageState extends State<LayersPage> {
                   layerSourceItem.isLoaded = false;
                 }
               }
+              _somethingChanged = true;
+            }));
+      }
+      if (layerSourceItem is GssLayerSource &&
+          (layerSourceItem as GssLayerSource).canUpload()) {
+        startActions.add(SlidableAction(
+            label: SL.of(context).gss_layerview_upload_changes,
+            foregroundColor: SmashColors.mainDecorations,
+            icon: MdiIcons.upload,
+            onPressed: (tmpcontext) async {
+              await (layerSourceItem as GssLayerSource).upload(context);
               _somethingChanged = true;
             }));
       }
@@ -386,6 +492,8 @@ Future<bool> loadLayer(BuildContext context, String filePath) async {
     GeojsonSource geojsonLayer = GeojsonSource(filePath);
     await geojsonLayer.load(context);
     if (geojsonLayer.hasData()) {
+      geojsonLayer.isLoaded =
+          false; // TODO this should be solved for efficiency
       LayerManager().addLayerSource(geojsonLayer);
       return true;
     }

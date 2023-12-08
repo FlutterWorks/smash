@@ -3013,77 +3013,209 @@ abstract class SL {
   /// **'Could not connect to the server. Is it online? Check your address.'**
   String get network_couldNotConnectToServer;
 
-  /// No description provided for @form_sketch_newSketch.
-  ///
-  /// In en, this message translates to:
-  /// **'New Sketch'**
-  String get form_sketch_newSketch;
-
-  /// No description provided for @form_sketch_undo.
-  ///
-  /// In en, this message translates to:
-  /// **'Undo'**
-  String get form_sketch_undo;
-
-  /// No description provided for @form_sketch_noUndo.
-  ///
-  /// In en, this message translates to:
-  /// **'Nothing to undo'**
-  String get form_sketch_noUndo;
-
-  /// No description provided for @form_sketch_clear.
-  ///
-  /// In en, this message translates to:
-  /// **'Clear'**
-  String get form_sketch_clear;
-
-  /// No description provided for @form_sketch_save.
-  ///
-  /// In en, this message translates to:
-  /// **'Save'**
-  String get form_sketch_save;
-
-  /// No description provided for @form_sketch_sketcher.
-  ///
-  /// In en, this message translates to:
-  /// **'Sketcher'**
-  String get form_sketch_sketcher;
-
-  /// No description provided for @form_sketch_enableDrawing.
-  ///
-  /// In en, this message translates to:
-  /// **'Turn on drawing'**
-  String get form_sketch_enableDrawing;
-
-  /// No description provided for @form_sketch_enableEraser.
-  ///
-  /// In en, this message translates to:
-  /// **'Turn on eraser'**
-  String get form_sketch_enableEraser;
-
-  /// No description provided for @form_sketch_backColor.
-  ///
-  /// In en, this message translates to:
-  /// **'Background color'**
-  String get form_sketch_backColor;
-
-  /// No description provided for @form_sketch_strokeColor.
-  ///
-  /// In en, this message translates to:
-  /// **'Stroke color'**
-  String get form_sketch_strokeColor;
-
-  /// No description provided for @form_sketch_pickColor.
-  ///
-  /// In en, this message translates to:
-  /// **'Pick color'**
-  String get form_sketch_pickColor;
-
   /// No description provided for @form_smash_cantSaveImageDb.
   ///
   /// In en, this message translates to:
   /// **'Could not save image in database.'**
   String get form_smash_cantSaveImageDb;
+
+  /// No description provided for @gss_settings.
+  ///
+  /// In en, this message translates to:
+  /// **'Geopaparazzi Survey Server Settings'**
+  String get gss_settings;
+
+  /// No description provided for @gss_settings_connection.
+  ///
+  /// In en, this message translates to:
+  /// **'GSS Connection Settings'**
+  String get gss_settings_connection;
+
+  /// No description provided for @gss_settings_server_url.
+  ///
+  /// In en, this message translates to:
+  /// **'Server URL'**
+  String get gss_settings_server_url;
+
+  /// No description provided for @gss_settings_server_url_start_http.
+  ///
+  /// In en, this message translates to:
+  /// **'Server url needs to start with http or https.'**
+  String get gss_settings_server_url_start_http;
+
+  /// No description provided for @gss_settings_project.
+  ///
+  /// In en, this message translates to:
+  /// **'GSS Project'**
+  String get gss_settings_project;
+
+  /// No description provided for @gss_settings_server_username.
+  ///
+  /// In en, this message translates to:
+  /// **'Server Username'**
+  String get gss_settings_server_username;
+
+  /// No description provided for @gss_settings_server_username_valid.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a valid server username.'**
+  String get gss_settings_server_username_valid;
+
+  /// No description provided for @gss_settings_password.
+  ///
+  /// In en, this message translates to:
+  /// **'Server Password'**
+  String get gss_settings_password;
+
+  /// No description provided for @gss_settings_password_valid.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a valid server password.'**
+  String get gss_settings_password_valid;
+
+  /// No description provided for @gss_settings_certificates_self.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow self signed certificates'**
+  String get gss_settings_certificates_self;
+
+  /// No description provided for @gss_settings_upload_position.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload device position to server in regular time intervals.'**
+  String get gss_settings_upload_position;
+
+  /// No description provided for @gss_settings_data_missing.
+  ///
+  /// In en, this message translates to:
+  /// **'User, password, url and project are necessary to login'**
+  String get gss_settings_data_missing;
+
+  /// No description provided for @gss_settings_login.
+  ///
+  /// In en, this message translates to:
+  /// **'Login'**
+  String get gss_settings_login;
+
+  /// No description provided for @gss_settings_no_token.
+  ///
+  /// In en, this message translates to:
+  /// **'No token available, please login.'**
+  String get gss_settings_no_token;
+
+  /// No description provided for @layersView_selectGssLayers.
+  ///
+  /// In en, this message translates to:
+  /// **'Select GSS Layers'**
+  String get layersView_selectGssLayers;
+
+  /// No description provided for @layersView_noGssLayersFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No GSS layers found.'**
+  String get layersView_noGssLayersFound;
+
+  /// No description provided for @layersView_selectGssLayersToLoad.
+  ///
+  /// In en, this message translates to:
+  /// **'Select GSS layers to load.'**
+  String get layersView_selectGssLayersToLoad;
+
+  /// No description provided for @layersView_unableToLoadGssLayers.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to load:'**
+  String get layersView_unableToLoadGssLayers;
+
+  /// No description provided for @layersView_layerExists.
+  ///
+  /// In en, this message translates to:
+  /// **'Layer exists'**
+  String get layersView_layerExists;
+
+  /// No description provided for @layersView_layerAlreadyExists.
+  ///
+  /// In en, this message translates to:
+  /// **'Layer already exists, do you want to overwrite it?'**
+  String get layersView_layerAlreadyExists;
+
+  /// No description provided for @gss_layerview_upload_changes.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload changes'**
+  String get gss_layerview_upload_changes;
+
+  /// No description provided for @allGpsPointsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Gps points'**
+  String get allGpsPointsCount;
+
+  /// No description provided for @filteredGpsPointsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Filtered points'**
+  String get filteredGpsPointsCount;
+
+  /// No description provided for @addTmsFromDefaults.
+  ///
+  /// In en, this message translates to:
+  /// **'Add TMS from defaults'**
+  String get addTmsFromDefaults;
+
+  /// No description provided for @form_smash_noCameraDesktop.
+  ///
+  /// In en, this message translates to:
+  /// **'No camera option available on desktop.'**
+  String get form_smash_noCameraDesktop;
+
+  /// No description provided for @settings_BottombarCustomization.
+  ///
+  /// In en, this message translates to:
+  /// **'Bottombar Customization'**
+  String get settings_BottombarCustomization;
+
+  /// No description provided for @settings_Bottombar_showAddNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Show the ADD NOTE button'**
+  String get settings_Bottombar_showAddNote;
+
+  /// No description provided for @settings_Bottombar_showAddFormNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Show the ADD FORM NOTE button'**
+  String get settings_Bottombar_showAddFormNote;
+
+  /// No description provided for @settings_Bottombar_showAddGpsLog.
+  ///
+  /// In en, this message translates to:
+  /// **'Show the ADD GPS LOG button'**
+  String get settings_Bottombar_showAddGpsLog;
+
+  /// No description provided for @settings_Bottombar_showGpsButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Show the gps button'**
+  String get settings_Bottombar_showGpsButton;
+
+  /// No description provided for @settings_Bottombar_showLayers.
+  ///
+  /// In en, this message translates to:
+  /// **'Show the layers button'**
+  String get settings_Bottombar_showLayers;
+
+  /// No description provided for @settings_Bottombar_showZoom.
+  ///
+  /// In en, this message translates to:
+  /// **'Show the zoom buttons'**
+  String get settings_Bottombar_showZoom;
+
+  /// No description provided for @settings_Bottombar_showEditing.
+  ///
+  /// In en, this message translates to:
+  /// **'Show the editing button'**
+  String get settings_Bottombar_showEditing;
 }
 
 class _SLDelegate extends LocalizationsDelegate<SL> {

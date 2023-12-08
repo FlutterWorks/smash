@@ -3,10 +3,10 @@ import 'dart:io';
 
 import 'package:dart_hydrologis_db/dart_hydrologis_db.dart';
 import 'package:dart_hydrologis_utils/dart_hydrologis_utils.dart';
+import 'package:dart_jts/dart_jts.dart';
 import 'package:dart_postgis/dart_postgis.dart';
 import 'package:flutter/material.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:smash/eu/hydrologis/smash/forms/form_sketch.dart';
 import 'package:smash/eu/hydrologis/smash/gps/gps.dart';
 import 'package:smash/eu/hydrologis/smash/models/project_state.dart';
 import 'package:provider/provider.dart';
@@ -24,13 +24,13 @@ const FORMS_FIELD = "forms";
 
 class SmashFormHelper extends AFormhelper {
   String _sectionName;
-  Map<String, dynamic> _sectionMap;
+  SmashSection _section;
   Widget _titleWidget;
   int? _id;
   dynamic _position;
 
-  SmashFormHelper(this._id, this._sectionName, this._sectionMap,
-      this._titleWidget, this._position);
+  SmashFormHelper(this._id, this._sectionName, this._section, this._titleWidget,
+      this._position);
 
   @override
   Future<bool> init() async {
@@ -59,8 +59,8 @@ class SmashFormHelper extends AFormhelper {
   }
 
   @override
-  Map<String, dynamic> getSectionMap() {
-    return _sectionMap;
+  SmashSection getSection() {
+    return _section;
   }
 
   @override
@@ -71,10 +71,21 @@ class SmashFormHelper extends AFormhelper {
   /// Take a picture for forms
   Future<String?> takePictureForForms(
       BuildContext context, bool fromGallery, List<String> imageSplit) async {
+    bool isDektop = Workspace.isDesktop();
+    if (isDektop && !fromGallery) {
+      SmashDialogs.showWarningDialog(
+          context, SL.of(context).form_smash_noCameraDesktop);
+      return null;
+    }
+
     var gpsState = Provider.of<GpsState>(context, listen: false);
     dynamic lastGpsPosition = _position;
-    if (gpsState != null && gpsState.lastGpsPosition != null) {
+    if (gpsState.lastGpsPosition != null) {
       lastGpsPosition = gpsState.lastGpsPosition;
+    }
+    if (lastGpsPosition is Coordinate) {
+      lastGpsPosition = SmashPosition.fromCoords(lastGpsPosition.x,
+          lastGpsPosition.y, DateTime.now().millisecondsSinceEpoch.toDouble());
     }
     var cameraResolution = GpPreferences().getStringSync(
         SmashPreferencesKeys.KEY_CAMERA_RESOLUTION, CameraResolutions.MEDIUM);
@@ -108,6 +119,7 @@ class SmashFormHelper extends AFormhelper {
     }
 
     int? imageId;
+
     var imagePath = fromGallery
         ? await Camera.loadImageFromGallery()
         : await Camera.takePicture(imageQuality: imageQuality);
@@ -184,14 +196,11 @@ class SmashFormHelper extends AFormhelper {
 
   /// Get thumbnails from the database
   Future<List<Widget>> getThumbnailsFromDb(BuildContext context,
-      Map<String, dynamic> itemsMap, List<String> imageSplit) async {
+      SmashFormItem formItem, List<String> imageSplit) async {
     ProjectState projectState =
         Provider.of<ProjectState>(context, listen: false);
 
-    String value = ""; //$NON-NLS-1$
-    if (itemsMap.containsKey(TAG_VALUE)) {
-      value = itemsMap[TAG_VALUE].trim();
-    }
+    String value = formItem.value ?? ""; //$NON-NLS-1$
     if (value.isNotEmpty) {
       var split = value.split(IMAGE_ID_SEPARATOR);
       split.forEach((v) {
@@ -219,13 +228,13 @@ class SmashFormHelper extends AFormhelper {
     ProjectState projectState =
         Provider.of<ProjectState>(context, listen: false);
     var db = projectState.projectDb;
-    String jsonForm = jsonEncode(_sectionMap);
+    String jsonForm = _section.toJson();
     int noteId;
     int ts = DateTime.now().millisecondsSinceEpoch;
     if (_id == null) {
       // create new note in position based on form
 
-      var iconName = TagsManager.getIcon4Section(_sectionMap);
+      var iconName = _section.getIcon();
       String iconColor = ColorExt.asHex(SmashColors.mainDecorationsDarker);
 
       SmashPosition? pos;

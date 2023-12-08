@@ -1457,38 +1457,104 @@ class SLRu extends SL {
   String get network_couldNotConnectToServer => 'Could not connect to the server. Is it online? Check your address.';
 
   @override
-  String get form_sketch_newSketch => 'New Sketch';
-
-  @override
-  String get form_sketch_undo => 'Отменить';
-
-  @override
-  String get form_sketch_noUndo => 'Nothing to undo';
-
-  @override
-  String get form_sketch_clear => 'Очистить';
-
-  @override
-  String get form_sketch_save => 'Сохранить';
-
-  @override
-  String get form_sketch_sketcher => 'Sketcher';
-
-  @override
-  String get form_sketch_enableDrawing => 'Turn on drawing';
-
-  @override
-  String get form_sketch_enableEraser => 'Turn on eraser';
-
-  @override
-  String get form_sketch_backColor => 'Background color';
-
-  @override
-  String get form_sketch_strokeColor => 'Stroke color';
-
-  @override
-  String get form_sketch_pickColor => 'Pick color';
-
-  @override
   String get form_smash_cantSaveImageDb => 'Could not save image in database.';
+
+  @override
+  String get gss_settings => 'Geopaparazzi Survey Server Settings';
+
+  @override
+  String get gss_settings_connection => 'GSS Connection Settings';
+
+  @override
+  String get gss_settings_server_url => 'Server URL';
+
+  @override
+  String get gss_settings_server_url_start_http => 'Server url needs to start with http or https.';
+
+  @override
+  String get gss_settings_project => 'GSS Project';
+
+  @override
+  String get gss_settings_server_username => 'Server Username';
+
+  @override
+  String get gss_settings_server_username_valid => 'Please enter a valid server username.';
+
+  @override
+  String get gss_settings_password => 'Server Password';
+
+  @override
+  String get gss_settings_password_valid => 'Please enter a valid server password.';
+
+  @override
+  String get gss_settings_certificates_self => 'Allow self signed certificates';
+
+  @override
+  String get gss_settings_upload_position => 'Upload device position to server in regular time intervals.';
+
+  @override
+  String get gss_settings_data_missing => 'User, password, url and project are necessary to login';
+
+  @override
+  String get gss_settings_login => 'Login';
+
+  @override
+  String get gss_settings_no_token => 'No token available, please login.';
+
+  @override
+  String get layersView_selectGssLayers => 'Select GSS Layers';
+
+  @override
+  String get layersView_noGssLayersFound => 'No GSS layers found.';
+
+  @override
+  String get layersView_selectGssLayersToLoad => 'Select GSS layers to load.';
+
+  @override
+  String get layersView_unableToLoadGssLayers => 'Unable to load:';
+
+  @override
+  String get layersView_layerExists => 'Layer exists';
+
+  @override
+  String get layersView_layerAlreadyExists => 'Layer already exists, do you want to overwrite it?';
+
+  @override
+  String get gss_layerview_upload_changes => 'Upload changes';
+
+  @override
+  String get allGpsPointsCount => 'Gps points';
+
+  @override
+  String get filteredGpsPointsCount => 'Filtered points';
+
+  @override
+  String get addTmsFromDefaults => 'Add TMS from defaults';
+
+  @override
+  String get form_smash_noCameraDesktop => 'No camera option available on desktop.';
+
+  @override
+  String get settings_BottombarCustomization => 'Bottombar Customization';
+
+  @override
+  String get settings_Bottombar_showAddNote => 'Show the ADD NOTE button';
+
+  @override
+  String get settings_Bottombar_showAddFormNote => 'Show the ADD FORM NOTE button';
+
+  @override
+  String get settings_Bottombar_showAddGpsLog => 'Show the ADD GPS LOG button';
+
+  @override
+  String get settings_Bottombar_showGpsButton => 'Show the gps button';
+
+  @override
+  String get settings_Bottombar_showLayers => 'Show the layers button';
+
+  @override
+  String get settings_Bottombar_showZoom => 'Show the zoom buttons';
+
+  @override
+  String get settings_Bottombar_showEditing => 'Show the editing button';
 }

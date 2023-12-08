@@ -192,16 +192,24 @@ class MainViewWidgetState extends State<MainViewWidget>
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<SmashMapBuilder>(builder: (context, mapBuilder, child) {
-      mapBuilder.context = context;
-      mapBuilder.scaffoldKey = _scaffoldKey;
-      return consumeBuild(mapBuilder);
+    return Consumer<PreferencesState>(builder: (context, prefsState, child) {
+      _iconSize = prefsState.iconSize;
+      return Consumer<SmashMapBuilder>(builder: (context, mapBuilder, child) {
+        mapBuilder.context = context;
+        mapBuilder.scaffoldKey = _scaffoldKey;
+        return consumeBuild(mapBuilder, prefsState);
+      });
     });
   }
 
-  Widget consumeBuild(SmashMapBuilder mapBuilder) {
-    _iconSize = GpPreferences().getDoubleSync(
-        SmashPreferencesKeys.KEY_MAPTOOLS_ICON_SIZE, SmashUI.MEDIUM_ICON_SIZE);
+  Widget consumeBuild(SmashMapBuilder mapBuilder, PreferencesState prefsState) {
+    var width = ScreenUtilities.getWidth(context);
+    // check if the 7 icons would fit and give a max icon size
+    var maxIconSize = width / 12;
+    if (_iconSize! > maxIconSize) {
+      _iconSize = maxIconSize;
+    }
+
     var projectState =
         Provider.of<ProjectState>(mapBuilder.context!, listen: false);
     var mapState =
@@ -291,36 +299,18 @@ class MainViewWidgetState extends State<MainViewWidget>
                       ),
                     )
                   : Container(),
-              Align(
-                alignment: Alignment.bottomRight,
-                child: _iconMode == IconMode.NAVIGATION_MODE
-                    ? IconButton(
-                        key: coachMarks.toolbarButtonKey,
-                        icon: Icon(
-                          MdiIcons.forwardburger,
-                          color: SmashColors.mainDecorations,
-                          size: 32,
-                        ),
-                        onPressed: () {
-                          setState(() {
-                            _iconMode = IconMode.TOOL_MODE;
-                          });
-                        },
-                      )
-                    : IconButton(
-                        icon: Icon(
-                          MdiIcons.backburger,
-                          color: SmashColors.mainDecorations,
-                          size: 32,
-                        ),
-                        onPressed: () {
-                          BottomToolbarToolsRegistry.disableAll(context);
-                          setState(() {
-                            _iconMode = IconMode.NAVIGATION_MODE;
-                          });
-                        },
-                      ),
-              )
+              if (prefsState.showEditingButton && prefsState.showZoomButton)
+                Align(
+                    alignment: Alignment.bottomRight,
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: makeEditButton(prefsState),
+                    )),
+              if (_iconMode != IconMode.NAVIGATION_MODE)
+                Align(
+                  alignment: Alignment.bottomLeft,
+                  child: SmashToolsBar(_iconSize),
+                )
             ],
           ),
           drawer: Drawer(
@@ -343,23 +333,10 @@ class MainViewWidgetState extends State<MainViewWidget>
           )),
           endDrawer: Drawer(
               child: ListView(
-            children: DashboardUtils.getEndDrawerListTiles(context!),
+            children: DashboardUtils.getEndDrawerListTiles(context),
           )),
-          // Theme(
-          //   data: Theme.of(context).copyWith(canvasColor: Colors.transparent),
-          //   child: Drawer(
-          //       child: Container(
-          //     color: Colors.transparent,
-          //     child: ListView(
-          //       children: DashboardUtils.getEndDrawerListTiles(
-          //           context, _mapController),
-          //     ),
-          //   )),
-          // ),
-
-          bottomNavigationBar: _iconMode == IconMode.NAVIGATION_MODE
-              ? addBottomNavigationBar(mapBuilder, projectData, mapState)
-              : BottomToolsBar(_iconSize),
+          bottomNavigationBar: addBottomNavigationBar(
+              mapBuilder, projectData, mapState, prefsState),
         ),
         onWillPop: () async {
           return Future.value(false);
@@ -461,54 +438,65 @@ class MainViewWidgetState extends State<MainViewWidget>
     ];
   }
 
-  BottomAppBar addBottomNavigationBar(SmashMapBuilder mapBuilder,
-      ProjectData? projectData, SmashMapState mapState) {
+  BottomAppBar addBottomNavigationBar(
+      SmashMapBuilder mapBuilder,
+      ProjectData? projectData,
+      SmashMapState mapState,
+      PreferencesState prefsState) {
     return BottomAppBar(
       color: SmashColors.mainDecorations,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.start,
         children: <Widget>[
-          makeSimpleNoteButton(mapBuilder, projectData),
-          makeFormNotesButton(mapBuilder, projectData),
-          DashboardUtils.makeToolbarBadge(
-            LoggingButton(coachMarks.logsButtonKey, _iconSize!),
-            projectData != null ? projectData.logsCount! : 0,
-            iconSize: _iconSize,
-          ),
-          Spacer(),
-          GpsInfoButton(coachMarks.gpsButtonKey, _iconSize!),
-          Spacer(),
-          makeLayersButton(mapBuilder),
-          Consumer<SmashMapState>(builder: (context, mapState, child) {
-            return DashboardUtils.makeToolbarZoomBadge(
-              IconButton(
-                key: coachMarks.zoomInButtonKey,
-                onPressed: () {
-                  mapState.zoomIn();
-                },
-                tooltip: SL.of(context).mainView_zoomIn, //'Zoom in',
-                icon: Icon(
-                  SmashIcons.zoomInIcon,
-                  color: SmashColors.mainBackground,
-                ),
-                iconSize: _iconSize,
-              ),
-              mapState.zoom.toInt(),
+          if (prefsState.showAddNoteButton)
+            makeSimpleNoteButton(mapBuilder, projectData),
+          if (prefsState.showAddFormNoteButton)
+            makeFormNotesButton(mapBuilder, projectData),
+          if (prefsState.showAddLogButton)
+            DashboardUtils.makeToolbarBadge(
+              LoggingButton(coachMarks.logsButtonKey, _iconSize!),
+              projectData != null ? projectData.logsCount! : 0,
               iconSize: _iconSize,
-            );
-          }),
-          IconButton(
-            key: coachMarks.zoomOutButtonKey,
-            onPressed: () {
-              mapState.zoomOut();
-            },
-            tooltip: SL.of(context).mainView_zoomOut, //'Zoom out',
-            icon: Icon(
-              SmashIcons.zoomOutIcon,
-              color: SmashColors.mainBackground,
             ),
-            iconSize: _iconSize,
-          ),
+          Spacer(),
+          if (prefsState.showGpsInfoButton)
+            GpsInfoButton(coachMarks.gpsButtonKey, _iconSize!),
+          Spacer(),
+          if (prefsState.showLayerButton) makeLayersButton(mapBuilder),
+          if (prefsState.showZoomButton)
+            Consumer<SmashMapState>(builder: (context, mapState, child) {
+              return DashboardUtils.makeToolbarZoomBadge(
+                IconButton(
+                  key: coachMarks.zoomInButtonKey,
+                  onPressed: () {
+                    mapState.zoomIn();
+                  },
+                  tooltip: SL.of(context).mainView_zoomIn, //'Zoom in',
+                  icon: Icon(
+                    SmashIcons.zoomInIcon,
+                    color: SmashColors.mainBackground,
+                  ),
+                  iconSize: _iconSize,
+                ),
+                mapState.zoom.toInt(),
+                iconSize: _iconSize,
+              );
+            }),
+          if (prefsState.showZoomButton)
+            IconButton(
+              key: coachMarks.zoomOutButtonKey,
+              onPressed: () {
+                mapState.zoomOut();
+              },
+              tooltip: SL.of(context).mainView_zoomOut, //'Zoom out',
+              icon: Icon(
+                SmashIcons.zoomOutIcon,
+                color: SmashColors.mainBackground,
+              ),
+              iconSize: _iconSize,
+            ),
+          if (prefsState.showEditingButton && !prefsState.showZoomButton)
+            makeEditButton(prefsState)
         ],
       ),
     );
@@ -532,7 +520,7 @@ class MainViewWidgetState extends State<MainViewWidget>
         await Navigator.push(mapBuilder.context!,
             MaterialPageRoute(builder: (context) => LayersPage()));
 
-        mapView.triggerRebuild(context);
+        Provider.of<SmashMapBuilder>(context, listen: false).reBuild();
         // ! TODO
         // var layers = await LayerManager().loadLayers(context);
         // _activeLayers.clear();
@@ -540,6 +528,46 @@ class MainViewWidgetState extends State<MainViewWidget>
         //   _activeLayers.addAll(layers);
         // });
       },
+    );
+  }
+
+  Widget makeEditButton(PreferencesState prefsState) {
+    return Container(
+      decoration: BoxDecoration(
+        color: SmashColors.mainDecorations,
+        border: Border.all(
+          color: SmashColors.mainDecorations,
+          width: 1,
+        ),
+        borderRadius: BorderRadius.circular(_iconSize!),
+      ),
+      child: _iconMode == IconMode.NAVIGATION_MODE
+          ? InkWell(
+              key: coachMarks.toolbarButtonKey,
+              child: Icon(
+                MdiIcons.pencilCircleOutline,
+                color: SmashColors.mainBackground,
+                size: _iconSize,
+              ),
+              onTap: () {
+                setState(() {
+                  _iconMode = IconMode.TOOL_MODE;
+                });
+              },
+            )
+          : InkWell(
+              child: Icon(
+                MdiIcons.pencilCircleOutline,
+                color: SmashColors.mainSelection,
+                size: _iconSize,
+              ),
+              onTap: () {
+                BottomToolbarToolsRegistry.disableAll(context);
+                setState(() {
+                  _iconMode = IconMode.NAVIGATION_MODE;
+                });
+              },
+            ),
     );
   }
 
@@ -575,40 +603,38 @@ class MainViewWidgetState extends State<MainViewWidget>
             ],
           );
 
-          var allSectionsMap = TagsManager().getSectionsMap();
-          List<String> sectionNames = allSectionsMap.keys.toList();
+          var tm = TagsManager();
+          await tm.readTags();
+          var tags = tm.getTags();
+          List<SmashSection> section = tags.getSections();
           List<String> iconNames = [];
-          sectionNames.forEach((key) {
-            var icon4section =
-                TagsManager.getIcon4Section(allSectionsMap[key]!);
-            iconNames.add(icon4section);
+          section.forEach((section) {
+            iconNames.add(section.getIcon());
           });
 
-          var selectedSection = await SmashDialogs.showComboDialog(
+          var sectionNames = tags.getSectionNames();
+          var selectedSectionName = await SmashDialogs.showComboDialog(
               mapBuilder.context!, titleWithMode, sectionNames,
               iconNames: iconNames);
           // refresh mode
           noteInGpsMode = gpsState.insertInGpsMode;
-          if (selectedSection != null) {
+          if (selectedSectionName != null) {
             Widget appbarWidget = getDialogTitleWithInsertionMode(
-                selectedSection, noteInGpsMode, SmashColors.mainBackground);
+                selectedSectionName, noteInGpsMode, SmashColors.mainBackground);
 
-            var selectedIndex = sectionNames.indexOf(selectedSection);
-            var iconName = iconNames[selectedIndex];
-            var sectionMap = allSectionsMap[selectedSection];
-            var jsonString = jsonEncode(sectionMap);
+            var selectSection = tags.getSectionByName(selectedSectionName);
             Note note = DataLoaderUtilities.addNote(
                 mapBuilder, noteInGpsMode, mapView.getBounds()!.centre()!,
-                text: selectedSection,
-                form: jsonString,
-                iconName: iconName,
+                text: selectedSectionName,
+                form: selectSection?.toJson(),
+                iconName: selectSection?.getIcon(),
                 color: ColorExt.asHex(SmashColors.mainDecorationsDarker));
 
             var position = noteInGpsMode == POINT_INSERTION_MODE_GPS
                 ? gpsState.lastGpsPosition
                 : mapView.getBounds()!.centre()!;
-            var formHelper = SmashFormHelper(
-                note.id!, selectedSection, sectionMap!, appbarWidget, position);
+            var formHelper = SmashFormHelper(note.id!, selectedSectionName,
+                selectSection!, appbarWidget, position);
 
             Navigator.push(mapBuilder.context!, MaterialPageRoute(
               builder: (context) {
