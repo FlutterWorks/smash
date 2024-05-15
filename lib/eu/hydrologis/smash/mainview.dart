@@ -32,6 +32,7 @@ import 'package:smash/eu/hydrologis/smash/widgets/gps_log_button.dart';
 import 'package:smash/eu/hydrologis/smash/widgets/note_list.dart';
 import 'package:smash/eu/hydrologis/smash/widgets/note_properties.dart';
 import 'package:smash/eu/hydrologis/smash/widgets/settings.dart';
+import 'package:smash/eu/hydrologis/smash/widgets/gps_mode_selector.dart';
 import 'package:smash/generated/l10n.dart';
 import 'package:smashlibs/com/hydrologis/flutterlibs/utils/logging.dart';
 import 'package:smashlibs/smashlibs.dart';
@@ -53,7 +54,7 @@ class MainViewWidgetState extends State<MainViewWidget>
 
   MainViewCoachMarks coachMarks = MainViewCoachMarks();
 
-  double? _iconSize;
+  double _iconSize = 32;
 
   Timer? _centerOnGpsTimer;
 
@@ -206,7 +207,7 @@ class MainViewWidgetState extends State<MainViewWidget>
     var width = ScreenUtilities.getWidth(context);
     // check if the 7 icons would fit and give a max icon size
     var maxIconSize = width / 12;
-    if (_iconSize! > maxIconSize) {
+    if (_iconSize > maxIconSize) {
       _iconSize = maxIconSize;
     }
 
@@ -454,13 +455,13 @@ class MainViewWidgetState extends State<MainViewWidget>
             makeFormNotesButton(mapBuilder, projectData),
           if (prefsState.showAddLogButton)
             DashboardUtils.makeToolbarBadge(
-              LoggingButton(coachMarks.logsButtonKey, _iconSize!),
+              LoggingButton(coachMarks.logsButtonKey, _iconSize),
               projectData != null ? projectData.logsCount! : 0,
               iconSize: _iconSize,
             ),
           Spacer(),
           if (prefsState.showGpsInfoButton)
-            GpsInfoButton(coachMarks.gpsButtonKey, _iconSize!),
+            GpsInfoButton(coachMarks.gpsButtonKey, _iconSize),
           Spacer(),
           if (prefsState.showLayerButton) makeLayersButton(mapBuilder),
           if (prefsState.showZoomButton)
@@ -539,7 +540,7 @@ class MainViewWidgetState extends State<MainViewWidget>
           color: SmashColors.mainDecorations,
           width: 1,
         ),
-        borderRadius: BorderRadius.circular(_iconSize!),
+        borderRadius: BorderRadius.circular(_iconSize),
       ),
       child: _iconMode == IconMode.NAVIGATION_MODE
           ? InkWell(
@@ -852,82 +853,4 @@ Widget getDialogTitleWithInsertionMode(
             ),
     ],
   );
-}
-
-class GpsInsertionModeSelector extends StatefulWidget {
-  GpsInsertionModeSelector({Key? key}) : super(key: key);
-
-  @override
-  _GpsInsertionModeSelectorState createState() =>
-      _GpsInsertionModeSelectorState();
-}
-
-class _GpsInsertionModeSelectorState extends State<GpsInsertionModeSelector> {
-  int _mode = POINT_INSERTION_MODE_GPS;
-
-  @override
-  Widget build(BuildContext context) {
-    _mode = GpPreferences()
-            .getIntSync(KEY_DO_NOTE_IN_GPS, POINT_INSERTION_MODE_GPS) ??
-        POINT_INSERTION_MODE_GPS;
-
-    var gpsState = Provider.of<GpsState>(context, listen: false);
-
-    if (!gpsState.hasFix()) {
-      _mode = POINT_INSERTION_MODE_MAPCENTER;
-      gpsState.insertInGpsQuiet = _mode;
-    }
-
-    List<bool> sel = [];
-
-    List<Widget> buttons = [];
-    if (gpsState.hasFix()) {
-      buttons.add(Padding(
-        padding: const EdgeInsets.only(left: 8.0, right: 8.0),
-        child: Tooltip(
-            message: "Enter note in GPS position.",
-            child: Icon(SmashIcons.locationIcon)),
-      ));
-      sel.add(_mode == POINT_INSERTION_MODE_GPS);
-    }
-    buttons.add(Padding(
-      padding: const EdgeInsets.only(left: 8.0, right: 8.0),
-      child: Tooltip(
-          message: "Enter note in the map center.",
-          child: Icon(MdiIcons.imageFilterCenterFocus)),
-    ));
-    sel.add(_mode == POINT_INSERTION_MODE_MAPCENTER);
-
-    return Container(
-      child: ToggleButtons(
-        color: SmashColors.mainDecorations,
-        fillColor: SmashColors.mainSelectionMc[100],
-        selectedColor: SmashColors.mainSelection,
-        renderBorder: true,
-        borderRadius: BorderRadius.circular(15),
-        borderWidth: 3,
-        borderColor: SmashColors.mainDecorationsDarker,
-        selectedBorderColor: SmashColors.mainSelection,
-        children: buttons,
-        isSelected: sel,
-        onPressed: !gpsState.hasFix()
-            ? null
-            : (index) async {
-                int selMode;
-                if (index == 0) {
-                  selMode = POINT_INSERTION_MODE_GPS;
-                } else {
-                  //if (index == 1) {
-                  selMode = POINT_INSERTION_MODE_MAPCENTER;
-                }
-                var gpsState = Provider.of<GpsState>(context, listen: false);
-                gpsState.insertInGpsQuiet = selMode;
-
-                await GpPreferences().setInt(KEY_DO_NOTE_IN_GPS, selMode);
-                _mode = selMode;
-                setState(() {});
-              },
-      ),
-    );
-  }
 }
