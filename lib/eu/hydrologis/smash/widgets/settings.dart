@@ -1085,8 +1085,6 @@ class GpsSettingsState extends State<GpsSettings> {
         GpPreferences().getIntSync(testlogDurationKey, 500) ?? 500;
     bool useGpsFilteredGenerally = GpPreferences().getBooleanSync(
         SmashPreferencesKeys.KEY_GPS_USE_FILTER_GENERALLY, false);
-    bool useGpsGoogleServices = GpPreferences().getBooleanSync(
-        SmashPreferencesKeys.KEY_GPS_USE_GOOGLE_SERVICES, false);
 
     // SmashLocationAccuracy locationAccuracy =
     //     SmashLocationAccuracy.fromPreferences();
@@ -1333,43 +1331,6 @@ class GpsSettingsState extends State<GpsSettings> {
               ],
             ),
           ),
-          if (Platform.isAndroid)
-            Card(
-              margin: SmashUI.defaultMargin(),
-              color: SmashColors.mainBackground,
-              child: Column(
-                children: <Widget>[
-                  Padding(
-                    padding: SmashUI.defaultPadding(),
-                    child: SmashUI.normalText(
-                        SL
-                            .of(context)
-                            .settings_useGoogleToImproveLoc, //"Use Google Services to improve location"
-                        bold: true),
-                  ),
-                  ListTile(
-                    leading: Icon(MdiIcons.crosshairsGps),
-                    title: Text(
-                        "${useGpsGoogleServices ? SL.of(context).settings_disable : SL.of(context).settings_enable} ${SL.of(context).settings_useOfGoogleServicesRestart}"),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: <Widget>[
-                        Checkbox(
-                          value: useGpsGoogleServices,
-                          onChanged: (newValue) async {
-                            await GpPreferences().setBoolean(
-                                SmashPreferencesKeys
-                                    .KEY_GPS_USE_GOOGLE_SERVICES,
-                                newValue!);
-                            setState(() {});
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
         ],
       ),
     );
