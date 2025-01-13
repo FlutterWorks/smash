@@ -11,7 +11,7 @@ import 'package:after_layout/after_layout.dart';
 import 'package:dart_hydrologis_db/dart_hydrologis_db.dart';
 import 'package:dart_hydrologis_utils/dart_hydrologis_utils.dart' as HU;
 import 'package:flutter/material.dart';
-import 'package:flutter_map/plugin_api.dart';
+import 'package:flutter_map/flutter_map.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:smash/eu/hydrologis/smash/gps/filters.dart';
@@ -188,10 +188,19 @@ class CameraSettingState extends State<CameraSetting> {
 
   @override
   Widget build(BuildContext context) {
-    String value = GpPreferences().getStringSync(
+    String resolutionValue = GpPreferences().getStringSync(
             SmashPreferencesKeys.KEY_CAMERA_RESOLUTION,
             CameraResolutions.MEDIUM) ??
         CameraResolutions.MEDIUM;
+    int? frameWidth = GpPreferences()
+        .getIntSync(SmashPreferencesKeys.KEY_CAMERA_FRAME_W, null);
+    int? frameHeight = GpPreferences()
+        .getIntSync(SmashPreferencesKeys.KEY_CAMERA_FRAME_H, null);
+    String? frameColor = GpPreferences()
+        .getStringSync(SmashPreferencesKeys.KEY_CAMERA_FRAME_COLOR, "#000000");
+    bool doFillFrame = GpPreferences()
+        .getBooleanSync(SmashPreferencesKeys.KEY_CAMERA_FRAME_DOFILL, false);
+
     return Scaffold(
       appBar: new AppBar(
         title: Row(
@@ -213,65 +222,158 @@ class CameraSettingState extends State<CameraSetting> {
             margin: SmashUI.defaultMargin(),
             // elevation: SmashUI.DEFAULT_ELEVATION,
             color: SmashColors.mainBackground,
-            child: ListTile(
-              leading: Icon(MdiIcons.camera),
-              title: Text(SL.of(context).settings_resolution), //"Resolution"
-              subtitle: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Padding(
-                    padding: SmashUI.defaultTBPadding(),
-                    child: Text(
-                      SL
-                          .of(context)
-                          .settings_theCameraResolution, //"The camera resolution"
-                      textAlign: TextAlign.justify,
-                    ),
-                  ),
-                  DropdownButton<String>(
-                    value: value,
-                    isExpanded: false,
-                    items: [
-                      DropdownMenuItem(
-                        child: Container(
-                          child: Text(
-                            CameraResolutions.HIGH,
-                            textAlign: TextAlign.center,
-                          ),
-                          width: 200,
+            child: Column(
+              children: [
+                ListTile(
+                  leading: Icon(MdiIcons.camera),
+                  title: SmashUI.titleText(
+                    SL.of(context).settings_resolution,
+                    bold: true,
+                    color: SmashColors.mainDecorations,
+                  ), //"Resolution"
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Padding(
+                        padding: SmashUI.defaultTBPadding(),
+                        child: Text(
+                          SL
+                              .of(context)
+                              .settings_theCameraResolution, //"The camera resolution"
+                          textAlign: TextAlign.justify,
                         ),
-                        value: CameraResolutions.HIGH,
                       ),
-                      DropdownMenuItem(
-                        child: Container(
-                          child: Text(
-                            CameraResolutions.MEDIUM,
-                            textAlign: TextAlign.center,
+                      DropdownButton<String>(
+                        value: resolutionValue,
+                        isExpanded: false,
+                        items: [
+                          DropdownMenuItem(
+                            child: Container(
+                              child: Text(
+                                CameraResolutions.HIGH,
+                                textAlign: TextAlign.center,
+                              ),
+                              width: 200,
+                            ),
+                            value: CameraResolutions.HIGH,
                           ),
-                          width: 200,
-                        ),
-                        value: CameraResolutions.MEDIUM,
-                      ),
-                      DropdownMenuItem(
-                        child: Container(
-                          child: Text(
-                            CameraResolutions.LOW,
-                            textAlign: TextAlign.center,
+                          DropdownMenuItem(
+                            child: Container(
+                              child: Text(
+                                CameraResolutions.MEDIUM,
+                                textAlign: TextAlign.center,
+                              ),
+                              width: 200,
+                            ),
+                            value: CameraResolutions.MEDIUM,
                           ),
-                          width: 200,
-                        ),
-                        value: CameraResolutions.LOW,
+                          DropdownMenuItem(
+                            child: Container(
+                              child: Text(
+                                CameraResolutions.LOW,
+                                textAlign: TextAlign.center,
+                              ),
+                              width: 200,
+                            ),
+                            value: CameraResolutions.LOW,
+                          ),
+                        ],
+                        onChanged: (selected) async {
+                          await GpPreferences().setString(
+                              SmashPreferencesKeys.KEY_CAMERA_RESOLUTION,
+                              selected!);
+                          setState(() {});
+                        },
                       ),
                     ],
-                    onChanged: (selected) async {
-                      await GpPreferences().setString(
-                          SmashPreferencesKeys.KEY_CAMERA_RESOLUTION,
-                          selected!);
-                      setState(() {});
-                    },
                   ),
-                ],
-              ),
+                ),
+                ListTile(
+                  leading: Icon(MdiIcons.cameraSwitchOutline),
+                  title: SmashUI.titleText(
+                    "Frame",
+                    bold: true,
+                    color: SmashColors.mainDecorations,
+                  ), // Text(SL.of(context).settings_frame), //"Frame"
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      TextField(
+                        decoration: InputDecoration(
+                          labelText: SL.of(context).settings_width, //"Width"
+                        ),
+                        keyboardType: TextInputType.number,
+                        onChanged: (value) async {
+                          if (value.isEmpty) {
+                            value = "0";
+                          }
+                          await GpPreferences().setInt(
+                              SmashPreferencesKeys.KEY_CAMERA_FRAME_W,
+                              int.parse(value));
+                          setState(() {});
+                        },
+                        controller: TextEditingController()
+                          ..text = frameWidth?.toString() ?? "",
+                      ),
+                      TextField(
+                        decoration: InputDecoration(
+                          labelText:
+                              "Height", //SL.of(context).settings_height, //"Height"
+                        ),
+                        keyboardType: TextInputType.number,
+                        onChanged: (value) async {
+                          if (value.isEmpty) {
+                            value = "0";
+                          }
+                          await GpPreferences().setInt(
+                              SmashPreferencesKeys.KEY_CAMERA_FRAME_H,
+                              int.parse(value));
+                          setState(() {});
+                        },
+                        controller: TextEditingController()
+                          ..text = frameHeight?.toString() ?? "",
+                      ),
+                      Row(
+                        mainAxisSize: MainAxisSize.max,
+                        children: <Widget>[
+                          SmashUI.normalText(
+                              SL.of(context).settings_color), //"Color"
+                          Expanded(
+                              child: Padding(
+                            padding: const EdgeInsets.only(
+                              left: SmashUI.DEFAULT_PADDING,
+                              right: SmashUI.DEFAULT_PADDING,
+                            ),
+                            child: ColorPickerButton(
+                                Color(ColorExt(frameColor!).value),
+                                (newColor) async {
+                              var newColorStr = ColorExt.asHex(newColor);
+                              await GpPreferences().setString(
+                                  SmashPreferencesKeys.KEY_CAMERA_FRAME_COLOR,
+                                  newColorStr);
+                              setState(() {});
+                            }),
+                          )),
+                        ],
+                      ),
+                      Row(
+                        children: <Widget>[
+                          Text("Fill frame"),
+                          Checkbox(
+                            value: doFillFrame,
+                            onChanged: (selected) async {
+                              await GpPreferences().setBoolean(
+                                  SmashPreferencesKeys.KEY_CAMERA_FRAME_DOFILL,
+                                  selected!);
+                              setState(() {});
+                            },
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -654,6 +756,48 @@ class ScreenSettingState extends State<ScreenSetting> {
                 ],
               ),
             ),
+            Card(
+              margin: SmashUI.defaultMargin(),
+              color: SmashColors.mainBackground,
+              child: Column(
+                children: <Widget>[
+                  Padding(
+                    padding: SmashUI.defaultPadding(),
+                    child: SmashUI.normalText("Other"),
+                  ),
+                  Padding(
+                    padding: SmashUI.defaultPadding(),
+                    child: ListView(
+                      shrinkWrap: true,
+                      children: <Widget>[
+                        CheckboxListTile(
+                          value: GpPreferences().getBooleanSync(
+                              SmashPreferencesKeys
+                                  .KEY_SCREEN_SHOW_LOG_INFO_PANEL,
+                              true),
+                          onChanged: (selected) async {
+                            await GpPreferences().setBoolean(
+                                SmashPreferencesKeys
+                                    .KEY_SCREEN_SHOW_LOG_INFO_PANEL,
+                                selected!);
+
+                            PreferencesState prefState =
+                                Provider.of<PreferencesState>(context,
+                                    listen: false);
+                            prefState.onChanged();
+
+                            SettingsWidget.reloadMapSettings(context);
+                            setState(() {});
+                          },
+                          title:
+                              SmashUI.normalText("Toggle GPS log info panel"),
+                        )
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
             // TODO enable when working on dark theme
             //            Card(
             //              margin: SmashUI.defaultMargin(),
@@ -793,18 +937,18 @@ class GpsSettingsState extends State<GpsSettings> {
                 .settings_noPointAvailableYet); //"No point available yet."
       }
 
-      var layer = new MarkerLayer(
+      var layer = MarkerLayer(
         markers: gpsInfoList.map((msg) {
           var clr = Colors.red.withAlpha(100);
           if (msg == gpsInfoList.first) {
             clr = Colors.blue.withAlpha(150);
           }
 
-          return new Marker(
+          return Marker(
             width: 10,
             height: 10,
             point: LatLngExt.fromCoordinate(msg.newPosLatLon!),
-            builder: (ctx) => new Stack(
+            child: Stack(
               children: <Widget>[
                 Center(
                   child: Icon(
@@ -823,8 +967,9 @@ class GpsSettingsState extends State<GpsSettings> {
         children: <Widget>[
           FlutterMap(
             options: new MapOptions(
-              center: LatLngExt.fromCoordinate(gpsInfoList.last.newPosLatLon!),
-              zoom: 19,
+              initialCenter:
+                  LatLngExt.fromCoordinate(gpsInfoList.last.newPosLatLon!),
+              initialZoom: 19,
               minZoom: 7,
               maxZoom: 21,
             ),
@@ -1017,7 +1162,7 @@ class GpsSettingsState extends State<GpsSettings> {
                         color: SmashColors.mainBackground,
                       ),
                       onPressed: () {
-                        var z = _mapController.zoom + 1;
+                        var z = _mapController.camera.zoom + 1;
                         if (z > 21) z = 21;
                         _mapController.move(
                             LatLngExt.fromCoordinate(
@@ -1032,7 +1177,7 @@ class GpsSettingsState extends State<GpsSettings> {
                         color: SmashColors.mainBackground,
                       ),
                       onPressed: () {
-                        var z = _mapController.zoom - 1;
+                        var z = _mapController.camera.zoom - 1;
                         if (z < 7) z = 7;
                         _mapController.move(
                             LatLngExt.fromCoordinate(
@@ -1084,7 +1229,7 @@ class GpsSettingsState extends State<GpsSettings> {
     int testLogDuration =
         GpPreferences().getIntSync(testlogDurationKey, 500) ?? 500;
     bool useGpsFilteredGenerally = GpPreferences().getBooleanSync(
-        SmashPreferencesKeys.KEY_GPS_USE_FILTER_GENERALLY, false);
+        SmashPreferencesKeys.KEY_GPS_USE_FILTER_GENERALLY, true);
 
     // SmashLocationAccuracy locationAccuracy =
     //     SmashLocationAccuracy.fromPreferences();
@@ -1473,7 +1618,6 @@ class _NotesViewSettingState extends State<NotesViewSetting> {
             value: gpsState.notesMode,
             isExpanded: false,
             items: SmashPreferencesKeys.NOTESVIEWMODES.map((i) {
-              print(i);
               return DropdownMenuItem<String>(
                 child: Text(
                   i,
@@ -1525,7 +1669,7 @@ class _PluginsViewSettingState extends State<PluginsViewSetting> {
               bold: true), //"Map Plugins"
         ),
         PluginCheckboxWidget(PluginsHandler.SCALE.key),
-        PluginCheckboxWidget(PluginsHandler.GRID.key),
+        // PluginCheckboxWidget(PluginsHandler.GRID.key),
         PluginCheckboxWidget(PluginsHandler.CROSS.key),
         PluginCheckboxWidget(PluginsHandler.GPS.key),
         PluginCheckboxWidget(PluginsHandler.FENCE.key),

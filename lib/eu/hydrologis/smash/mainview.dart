@@ -22,11 +22,10 @@ import 'package:smash/eu/hydrologis/smash/gps/gps.dart';
 import 'package:smash/eu/hydrologis/smash/maps/layers/core/layersview.dart';
 import 'package:smash/eu/hydrologis/smash/maps/plugins/current_log_plugin.dart';
 import 'package:smash/eu/hydrologis/smash/maps/plugins/fences_plugin.dart';
-import 'package:smash/eu/hydrologis/smash/maps/plugins/gps_position_plugin.dart';
 import 'package:smash/eu/hydrologis/smash/models/project_state.dart';
 import 'package:smash/eu/hydrologis/smash/project/data_loader.dart';
 import 'package:smash/eu/hydrologis/smash/util/coachmarks.dart';
-import 'package:smash/eu/hydrologis/smash/util/fence.dart';
+import 'package:smashlibs/com/hydrologis/flutterlibs/utils/fence.dart';
 import 'package:smash/eu/hydrologis/smash/widgets/gps_info_button.dart';
 import 'package:smash/eu/hydrologis/smash/widgets/gps_log_button.dart';
 import 'package:smash/eu/hydrologis/smash/widgets/note_list.dart';
@@ -36,7 +35,6 @@ import 'package:smash/eu/hydrologis/smash/widgets/gps_mode_selector.dart';
 import 'package:smash/generated/l10n.dart';
 import 'package:smashlibs/com/hydrologis/flutterlibs/utils/logging.dart';
 import 'package:smashlibs/smashlibs.dart';
-import 'package:lat_lon_grid_plugin/lat_lon_grid_plugin.dart';
 import 'mainview_utils.dart';
 
 class MainViewWidget extends StatefulWidget {
@@ -193,9 +191,9 @@ class MainViewWidgetState extends State<MainViewWidget>
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<PreferencesState>(builder: (context, prefsState, child) {
+    return Consumer<PreferencesState>(builder: (context1, prefsState, child) {
       _iconSize = prefsState.iconSize;
-      return Consumer<SmashMapBuilder>(builder: (context, mapBuilder, child) {
+      return Consumer<SmashMapBuilder>(builder: (context2, mapBuilder, child) {
         mapBuilder.context = context;
         mapBuilder.scaffoldKey = _scaffoldKey;
         return consumeBuild(mapBuilder, prefsState);
@@ -750,27 +748,27 @@ class MainViewWidgetState extends State<MainViewWidget>
     if (PluginsHandler.FENCE.isOn()) {
       mapView.addPostLayer(FencesLayer());
     }
-    if (PluginsHandler.GRID.isOn()) {
-      var gridLayer = LatLonGridLayer(
-          key: ValueKey("SMASH_LATLONGRIDLAYER"),
-          options: LatLonGridLayerOptions(
-            labelStyle: TextStyle(
-              color: SmashColors.mainBackground,
-              backgroundColor: SmashColors.mainDecorations.withAlpha(170),
-              fontSize: 16.0,
-            ),
-            lineColor: SmashColors.mainDecorations,
-            lineWidth: 0.5,
-            showCardinalDirections: true,
-            showCardinalDirectionsAsPrefix: false,
-            showLabels: true,
-            rotateLonLabels: true,
-            placeLabelsOnLines: true,
-            offsetLonLabelsBottom: 20.0,
-            offsetLatLabelsLeft: 20.0,
-          ));
-      mapView.addPostLayer(gridLayer);
-    }
+    // if (PluginsHandler.GRID.isOn()) {
+    //   var gridLayer = LatLonGridLayer(
+    //       key: ValueKey("SMASH_LATLONGRIDLAYER"),
+    //       options: LatLonGridLayerOptions(
+    //         labelStyle: TextStyle(
+    //           color: SmashColors.mainBackground,
+    //           backgroundColor: SmashColors.mainDecorations.withAlpha(170),
+    //           fontSize: 16.0,
+    //         ),
+    //         lineColor: SmashColors.mainDecorations,
+    //         lineWidth: 0.5,
+    //         showCardinalDirections: true,
+    //         showCardinalDirectionsAsPrefix: false,
+    //         showLabels: true,
+    //         rotateLonLabels: true,
+    //         placeLabelsOnLines: true,
+    //         offsetLonLabelsBottom: 20.0,
+    //         offsetLatLabelsLeft: 20.0,
+    //       ));
+    //   mapView.addPostLayer(gridLayer);
+    // }
   }
 
   void addPluginsPostLayers() {

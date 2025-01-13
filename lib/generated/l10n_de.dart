@@ -1,5 +1,7 @@
 import 'l10n.dart';
 
+// ignore_for_file: type=lint
+
 /// The translations for German (`de`).
 class SLDe extends SL {
   SLDe([String locale = 'de']) : super(locale);
@@ -128,6 +130,9 @@ class SLDe extends SL {
   String get mainviewUtils_projectInfo => 'Project Info';
 
   @override
+  String get mainviewUtils_projectStats => 'Project Stats';
+
+  @override
   String get mainviewUtils_project => 'Project';
 
   @override
@@ -173,7 +178,7 @@ class SLDe extends SL {
   String get exportWidget_pdfExported => 'PDF exportiert';
 
   @override
-  String get exportWidget_exportToPortableDocumentFormat => 'Export project to Portable Document Format';
+  String get exportWidget_exportToPortableDocumentFormat => 'Exportiere Projekt als Portable Document Format';
 
   @override
   String get exportWidget_gpxExported => 'GPX exportiert';
@@ -185,28 +190,28 @@ class SLDe extends SL {
   String get exportWidget_kmlExported => 'KML exportiert';
 
   @override
-  String get exportWidget_exportToKml => 'Export project to KML';
+  String get exportWidget_exportToKml => 'Exportiere Projekt als KML';
 
   @override
-  String get exportWidget_imagesToFolderExported => 'Images exported';
+  String get exportWidget_imagesToFolderExported => 'Bilder exportieren';
 
   @override
-  String get exportWidget_exportImagesToFolder => 'Export project images to folder';
+  String get exportWidget_exportImagesToFolder => 'Exportiere Projektbilder in Ordner';
 
   @override
-  String get exportWidget_exportImagesToFolderTitle => 'Images';
+  String get exportWidget_exportImagesToFolderTitle => 'Bilder';
 
   @override
-  String get exportWidget_geopackageExported => 'Geopackage exported';
+  String get exportWidget_geopackageExported => 'Geopaket exportiert';
 
   @override
-  String get exportWidget_exportToGeopackage => 'Export project to Geopackage';
+  String get exportWidget_exportToGeopackage => 'Projekt in Geopaket exportieren';
 
   @override
-  String get exportWidget_exportToGSS => 'Export to Geopaparazzi Survey Server';
+  String get exportWidget_exportToGSS => 'Zum Geopaparazzi Survey Server exportieren';
 
   @override
-  String get gssExport_gssExport => 'GSS Export';
+  String get gssExport_gssExport => 'GSS Exportieren';
 
   @override
   String get gssExport_setProjectDirty => 'Set project to DIRTY?';
@@ -1265,9 +1270,6 @@ class SLDe extends SL {
   String get toolbarTools_measureDistanceWithFinger => 'Measure distances on the map with your finger.';
 
   @override
-  String get toolbarTools_toggleFenceMapCenter => 'Toggle fence in map center.';
-
-  @override
   String get toolbarTools_modifyGeomVectorLayers => 'Modify the geometry of editable vector layers.';
 
   @override
@@ -1371,51 +1373,6 @@ class SLDe extends SL {
 
   @override
   String get coachMarks_skip => 'Skip';
-
-  @override
-  String get fence_fenceProperties => 'Fence Properties';
-
-  @override
-  String get fence_delete => 'Delete';
-
-  @override
-  String get fence_removeFence => 'Remove fence';
-
-  @override
-  String get fence_areYouSureRemoveFence => 'Remove the fence?';
-
-  @override
-  String get fence_cancel => 'Cancel';
-
-  @override
-  String get fence_ok => 'OK';
-
-  @override
-  String get fence_aNewFence => 'a new fence';
-
-  @override
-  String get fence_label => 'Label';
-
-  @override
-  String get fence_aNameForFence => 'A name for the fence.';
-
-  @override
-  String get fence_theNameNeedsToBeDefined => 'The name must be defined.';
-
-  @override
-  String get fence_radius => 'Radius';
-
-  @override
-  String get fence_theFenceRadiusMeters => 'The fence radius in meters.';
-
-  @override
-  String get fence_radiusNeedsToBePositive => 'The radius must be a positive number in meters.';
-
-  @override
-  String get fence_onEnter => 'On enter';
-
-  @override
-  String get fence_onExit => 'On exit';
 
   @override
   String get network_cancelledByUser => 'Cancelled by user.';

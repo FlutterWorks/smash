@@ -1,5 +1,7 @@
 import 'l10n.dart';
 
+// ignore_for_file: type=lint
+
 /// The translations for French (`fr`).
 class SLFr extends SL {
   SLFr([String locale = 'fr']) : super(locale);
@@ -126,6 +128,9 @@ class SLFr extends SL {
 
   @override
   String get mainviewUtils_projectInfo => 'Infos sur le projet';
+
+  @override
+  String get mainviewUtils_projectStats => 'Project Stats';
 
   @override
   String get mainviewUtils_project => 'Projet';
@@ -1265,9 +1270,6 @@ class SLFr extends SL {
   String get toolbarTools_measureDistanceWithFinger => 'Mesurer les distances sur la carte avec votre doigt.';
 
   @override
-  String get toolbarTools_toggleFenceMapCenter => 'Toggle fence in map center.';
-
-  @override
   String get toolbarTools_modifyGeomVectorLayers => 'Modifier la géométrie des calques vectoriels modifiables.';
 
   @override
@@ -1371,51 +1373,6 @@ class SLFr extends SL {
 
   @override
   String get coachMarks_skip => 'Skip';
-
-  @override
-  String get fence_fenceProperties => 'Fence Properties';
-
-  @override
-  String get fence_delete => 'Supprimer';
-
-  @override
-  String get fence_removeFence => 'Remove fence';
-
-  @override
-  String get fence_areYouSureRemoveFence => 'Remove the fence?';
-
-  @override
-  String get fence_cancel => 'Cancel';
-
-  @override
-  String get fence_ok => 'OK';
-
-  @override
-  String get fence_aNewFence => 'a new fence';
-
-  @override
-  String get fence_label => 'Label';
-
-  @override
-  String get fence_aNameForFence => 'A name for the fence.';
-
-  @override
-  String get fence_theNameNeedsToBeDefined => 'The name must be defined.';
-
-  @override
-  String get fence_radius => 'Radius';
-
-  @override
-  String get fence_theFenceRadiusMeters => 'The fence radius in meters.';
-
-  @override
-  String get fence_radiusNeedsToBePositive => 'The radius must be a positive number in meters.';
-
-  @override
-  String get fence_onEnter => 'On enter';
-
-  @override
-  String get fence_onExit => 'On exit';
 
   @override
   String get network_cancelledByUser => 'Annulé par l’utilisateur.';

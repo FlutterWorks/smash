@@ -1,5 +1,7 @@
 import 'l10n.dart';
 
+// ignore_for_file: type=lint
+
 /// The translations for Czech (`cs`).
 class SLCs extends SL {
   SLCs([String locale = 'cs']) : super(locale);
@@ -126,6 +128,9 @@ class SLCs extends SL {
 
   @override
   String get mainviewUtils_projectInfo => 'Info o projektu';
+
+  @override
+  String get mainviewUtils_projectStats => 'Project Stats';
 
   @override
   String get mainviewUtils_project => 'Projekt';
@@ -1265,9 +1270,6 @@ class SLCs extends SL {
   String get toolbarTools_measureDistanceWithFinger => 'Měření vzdáleností na mapě prstem.';
 
   @override
-  String get toolbarTools_toggleFenceMapCenter => 'Přepínání plotu ve středu mapy.';
-
-  @override
   String get toolbarTools_modifyGeomVectorLayers => 'Úprava geometrie upravitelných vektorových vrstev.';
 
   @override
@@ -1373,51 +1375,6 @@ class SLCs extends SL {
   String get coachMarks_skip => 'Přeskočit';
 
   @override
-  String get fence_fenceProperties => 'Vlastnosti plotu Vlastnosti plotu';
-
-  @override
-  String get fence_delete => 'Smazat';
-
-  @override
-  String get fence_removeFence => 'Odstranit plot';
-
-  @override
-  String get fence_areYouSureRemoveFence => 'Chcete odstranit plot?';
-
-  @override
-  String get fence_cancel => 'Zrušit';
-
-  @override
-  String get fence_ok => 'OK';
-
-  @override
-  String get fence_aNewFence => 'nový plot';
-
-  @override
-  String get fence_label => 'Štítek';
-
-  @override
-  String get fence_aNameForFence => 'Název pro plot.';
-
-  @override
-  String get fence_theNameNeedsToBeDefined => 'Název musí být definován.';
-
-  @override
-  String get fence_radius => 'Poloměr';
-
-  @override
-  String get fence_theFenceRadiusMeters => 'Poloměr plotu v metrech.';
-
-  @override
-  String get fence_radiusNeedsToBePositive => 'Poloměr musí být kladné číslo v metrech.';
-
-  @override
-  String get fence_onEnter => 'Při vstupu';
-
-  @override
-  String get fence_onExit => 'Při odchodu';
-
-  @override
   String get network_cancelledByUser => 'Zrušeno uživatelem.';
 
   @override
@@ -1463,65 +1420,65 @@ class SLCs extends SL {
   String get formbuilder => 'Tvůrce formulářů';
 
   @override
-  String get layersView_selectGssLayers => 'Select GSS Layers';
+  String get layersView_selectGssLayers => 'Vybrat vrstvy GSS';
 
   @override
-  String get layersView_noGssLayersFound => 'No GSS layers found.';
+  String get layersView_noGssLayersFound => 'Nenalezeny žádné vrstvy GSS.';
 
   @override
-  String get layersView_noGssLayersAvailable => 'No layers available (loaded ones are not shown).';
+  String get layersView_noGssLayersAvailable => 'Nejsou k dispozici žádné vrstvy (načtené se nezobrazují).';
 
   @override
-  String get layersView_selectGssLayersToLoad => 'Select GSS layers to load.';
+  String get layersView_selectGssLayersToLoad => 'Vyberte vrstvy GSS k načtení.';
 
   @override
-  String get layersView_unableToLoadGssLayers => 'Unable to load:';
+  String get layersView_unableToLoadGssLayers => 'Nelze načíst:';
 
   @override
-  String get layersView_layerExists => 'Layer exists';
+  String get layersView_layerExists => 'Vrstva existuje';
 
   @override
-  String get layersView_layerAlreadyExists => 'Layer already exists, do you want to overwrite it?';
+  String get layersView_layerAlreadyExists => 'Vrstva již existuje, chcete ji přepsat?';
 
   @override
-  String get gss_layerview_upload_changes => 'Upload changes';
+  String get gss_layerview_upload_changes => 'Nahrát změny';
 
   @override
-  String get allGpsPointsCount => 'Gps points';
+  String get allGpsPointsCount => 'Gps body';
 
   @override
-  String get filteredGpsPointsCount => 'Filtered points';
+  String get filteredGpsPointsCount => 'Filtrované body';
 
   @override
-  String get addTmsFromDefaults => 'Add TMS from defaults';
+  String get addTmsFromDefaults => 'Přidat TMS z výchozích nastavení';
 
   @override
-  String get form_smash_noCameraDesktop => 'No camera option available on desktop.';
+  String get form_smash_noCameraDesktop => 'Na desktopu není k dispozici žádná možnost fotoaparátu.';
 
   @override
-  String get settings_BottombarCustomization => 'Bottombar Customization';
+  String get settings_BottombarCustomization => 'Přizpůsobení spodní lišty';
 
   @override
-  String get settings_Bottombar_showAddNote => 'Show the ADD NOTE button';
+  String get settings_Bottombar_showAddNote => 'Zobrazit tlačítko PŘIDAT POZNÁMKU';
 
   @override
-  String get settings_Bottombar_showAddFormNote => 'Show the ADD FORM NOTE button';
+  String get settings_Bottombar_showAddFormNote => 'Zobrazit tlačítko PŘIDAT POZNÁMKU K FORMULÁŘI';
 
   @override
-  String get settings_Bottombar_showAddGpsLog => 'Show the ADD GPS LOG button';
+  String get settings_Bottombar_showAddGpsLog => 'Zobrazit tlačítko PŘIDAT ZÁZNAM GPS';
 
   @override
-  String get settings_Bottombar_showGpsButton => 'Show the gps button';
+  String get settings_Bottombar_showGpsButton => 'Zobrazit tlačítko gps';
 
   @override
-  String get settings_Bottombar_showLayers => 'Show the layers button';
+  String get settings_Bottombar_showLayers => 'Zobrazit tlačítko vrstev';
 
   @override
-  String get settings_Bottombar_showZoom => 'Show the zoom buttons';
+  String get settings_Bottombar_showZoom => 'Zobrazit tlačítka přiblížení';
 
   @override
-  String get settings_Bottombar_showEditing => 'Show the editing button';
+  String get settings_Bottombar_showEditing => 'Zobrazit tlačítko pro úpravy';
 
   @override
-  String get gss_layerview_filter => 'Filter';
+  String get gss_layerview_filter => 'Filtr';
 }

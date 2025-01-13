@@ -25,10 +25,12 @@ import 'package:smash/eu/hydrologis/smash/util/urls.dart';
 import 'package:smash/eu/hydrologis/smash/widgets/about.dart';
 import 'package:smash/eu/hydrologis/smash/widgets/gps_mode_selector.dart';
 import 'package:smash/eu/hydrologis/smash/widgets/settings.dart';
+import 'package:smash/eu/hydrologis/smash/widgets/stats_page.dart';
 import 'package:smash/generated/l10n.dart';
 import 'package:smashlibs/smashlibs.dart';
 import 'package:smash_import_export_plugins/smash_import_export_plugins.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:geocoding/geocoding.dart' as GC;
 
 class DashboardUtils {
   static Widget makeToolbarBadge(Widget widget, int badgeValue,
@@ -220,49 +222,73 @@ class DashboardUtils {
 
     Color backColor = SmashColors.mainBackground;
     List<Widget> list = []
-      ..add(Container(
-        color: backColor,
-        child: ListTile(
-          title: SmashUI.normalText(
-            SL.of(context).mainviewUtils_projectInfo, //"Project Info"
-            bold: true,
-            color: c,
+      ..add(
+        Container(
+          color: backColor,
+          child: ListTile(
+            title: SmashUI.normalText(
+              SL.of(context).mainviewUtils_projectInfo, //"Project Info"
+              bold: true,
+              color: c,
+            ),
+            leading: new Icon(
+              MdiIcons.informationOutline,
+              color: c,
+              size: iconSize,
+            ),
+            onTap: () {
+              var projectState =
+                  Provider.of<ProjectState>(context, listen: false);
+              var mapBuilder =
+                  Provider.of<SmashMapBuilder>(context, listen: false);
+              String projectPath = projectState.projectPath!;
+              if (Platform.isIOS) {
+                projectPath =
+                    IOS_DOCUMENTSFOLDER + Workspace.makeRelative(projectPath);
+              }
+              var isLandscape = ScreenUtilities.isLandscape(context);
+              SmashDialogs.showInfoDialog(
+                  mapBuilder.context!,
+                  "${SL.of(context).mainviewUtils_project}: ${projectState.projectName}\n${SL.of(context).mainviewUtils_database}: $projectPath"
+                      .trim(), //Project //Database
+                  doLandscape: isLandscape,
+                  widgets: [
+                    IconButton(
+                      icon: Icon(
+                        Icons.share,
+                        color: SmashColors.mainDecorations,
+                      ),
+                      onPressed: () async {
+                        shareProject(mapBuilder.context!);
+                      },
+                    )
+                  ]);
+            },
           ),
-          leading: new Icon(
-            MdiIcons.informationOutline,
-            color: c,
-            size: iconSize,
-          ),
-          onTap: () {
-            var projectState =
-                Provider.of<ProjectState>(context, listen: false);
-            var mapBuilder =
-                Provider.of<SmashMapBuilder>(context, listen: false);
-            String projectPath = projectState.projectPath!;
-            if (Platform.isIOS) {
-              projectPath =
-                  IOS_DOCUMENTSFOLDER + Workspace.makeRelative(projectPath);
-            }
-            var isLandscape = ScreenUtilities.isLandscape(context);
-            SmashDialogs.showInfoDialog(
-                mapBuilder.context!,
-                "${SL.of(context).mainviewUtils_project}: ${projectState.projectName}\n${SL.of(context).mainviewUtils_database}: $projectPath"
-                    .trim(), //Project //Database
-                doLandscape: isLandscape,
-                widgets: [
-                  IconButton(
-                    icon: Icon(
-                      Icons.share,
-                      color: SmashColors.mainDecorations,
-                    ),
-                    onPressed: () async {
-                      shareProject(mapBuilder.context!);
-                    },
-                  )
-                ]);
-          },
         ),
-      ))
+      )
+      ..add(
+        Container(
+          color: backColor,
+          child: ListTile(
+            title: SmashUI.normalText(
+              SL.of(context).mainviewUtils_projectStats,
+              bold: true,
+              color: c,
+            ),
+            leading: new Icon(
+              MdiIcons.chartArc,
+              color: c,
+              size: iconSize,
+            ),
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.push(context,
+                  MaterialPageRoute(builder: (context) => ProjectStatsPage()));
+            },
+          ),
+        ),
+      )
       ..add(getPositionTools(c, backColor, iconSize, context))
       // ..add(getEditingTools(c, backColor, iconSize, context))
       ..add(getExtras(c, backColor, iconSize, context));
@@ -363,23 +389,25 @@ class DashboardUtils {
           color: c,
         ),
         children: [
-          ListTile(
-            leading: new Icon(
-              MdiIcons.navigation,
-              color: c,
-              size: iconSize,
+          if (GC.GeocodingPlatform.instance != null)
+            ListTile(
+              leading: new Icon(
+                MdiIcons.navigation,
+                color: c,
+                size: iconSize,
+              ),
+              title: SmashUI.normalText(
+                SL.of(context).mainviewUtils_goTo, //"Go to"
+                bold: true,
+                color: c,
+              ),
+              onTap: () {
+                Navigator.pop(context);
+
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (context) => GeocodingPage()));
+              },
             ),
-            title: SmashUI.normalText(
-              SL.of(context).mainviewUtils_goTo, //"Go to"
-              bold: true,
-              color: c,
-            ),
-            onTap: () {
-              Navigator.pop(context);
-              Navigator.push(context,
-                  MaterialPageRoute(builder: (context) => GeocodingPage()));
-            },
-          ),
           ListTile(
             leading: new Icon(
               MdiIcons.mapMarkerUp,

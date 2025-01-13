@@ -1,5 +1,7 @@
 import 'l10n.dart';
 
+// ignore_for_file: type=lint
+
 /// The translations for Russian (`ru`).
 class SLRu extends SL {
   SLRu([String locale = 'ru']) : super(locale);
@@ -126,6 +128,9 @@ class SLRu extends SL {
 
   @override
   String get mainviewUtils_projectInfo => 'Информация о проекте';
+
+  @override
+  String get mainviewUtils_projectStats => 'Project Stats';
 
   @override
   String get mainviewUtils_project => 'Проект';
@@ -1265,9 +1270,6 @@ class SLRu extends SL {
   String get toolbarTools_measureDistanceWithFinger => 'Measure distances on the map with your finger.';
 
   @override
-  String get toolbarTools_toggleFenceMapCenter => 'Toggle fence in map center.';
-
-  @override
   String get toolbarTools_modifyGeomVectorLayers => 'Modify the geometry of editable vector layers.';
 
   @override
@@ -1371,51 +1373,6 @@ class SLRu extends SL {
 
   @override
   String get coachMarks_skip => 'Пропустить';
-
-  @override
-  String get fence_fenceProperties => 'Fence Properties';
-
-  @override
-  String get fence_delete => 'Удалить';
-
-  @override
-  String get fence_removeFence => 'Remove fence';
-
-  @override
-  String get fence_areYouSureRemoveFence => 'Remove the fence?';
-
-  @override
-  String get fence_cancel => 'Отмена';
-
-  @override
-  String get fence_ok => 'ОК';
-
-  @override
-  String get fence_aNewFence => 'a new fence';
-
-  @override
-  String get fence_label => 'Label';
-
-  @override
-  String get fence_aNameForFence => 'A name for the fence.';
-
-  @override
-  String get fence_theNameNeedsToBeDefined => 'The name must be defined.';
-
-  @override
-  String get fence_radius => 'Радиус';
-
-  @override
-  String get fence_theFenceRadiusMeters => 'The fence radius in meters.';
-
-  @override
-  String get fence_radiusNeedsToBePositive => 'The radius must be a positive number in meters.';
-
-  @override
-  String get fence_onEnter => 'On enter';
-
-  @override
-  String get fence_onExit => 'On exit';
 
   @override
   String get network_cancelledByUser => 'Cancelled by user.';

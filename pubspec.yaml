@@ -5,7 +5,7 @@ name: smash
 description: The Smart Mobile Application for Surveyor's Happyness.
 publish_to: none
 
-version: 1.9.3+74 # we keep the build number growing to have it properly handled in android
+version: 1.9.4+75 # we keep the build number growing to have it properly handled in android
 # agvtool new-version -all 67
 
 environment:
@@ -73,15 +73,15 @@ dependencies:
   ##################################
   # MIT
   # this also pulls flutter_map_dragmarker
-  flutter_map_line_editor: ^4.1.0
+  flutter_map_line_editor: ^7.0.0
 
   # BSD
-  flutter_map: ^4.0.0
+  flutter_map: ^7.0.2
 
-  flutter_map_marker_cluster: ^1.1.1
+  flutter_map_marker_cluster: ^1.4.0
 
   # MIT
-  lat_lon_grid_plugin: ^0.2.6
+  # lat_lon_grid_plugin: ^0.2.6
     # git:
     #   url: https://github.com/moovida/lat_lon_grid_plugin.git
     #   ref: bump_flutter_map_to_1
@@ -89,25 +89,22 @@ dependencies:
   mapsforge_flutter: #^2.0.1
     # path: /home/hydrologis/development/SMASH/mapsforge_flutter_moovida/mapsforge_flutter
     git:
-    #   url: https://github.com/mikes222/mapsforge_flutter.git
-      url: https://github.com/moovida/mapsforge_flutter.git
+      url: https://github.com/mikes222/mapsforge_flutter.git
+      # url: https://github.com/moovida/mapsforge_flutter.git
       path: mapsforge_flutter
-      ref: smash_compats
+      ref: 3e5e41e988c2010b5136a7dd5e9dd164eb3e853e
 
   # apache
-  latlong2: ^0.8.1
+  latlong2: ^0.9.1
 
   # MIT
-  geocoding: ^2.0.5
+  geocoding: ^3.0.0
 
   ##################################
   # OTHERS
   ##################################
   # Apache 2.0
-  # catcher: ^0.6.9
-
-  # MIT
-  flutter_ringtone_player: ^3.2.0
+  catcher_2: ^2.0.1
 
   # MIT
   sqlite3_flutter_libs: ^0.5.9
@@ -146,7 +143,7 @@ dependencies:
   after_layout: ^1.2.0
 
   # BSD
-  package_info_plus: ^4.0.1
+  package_info_plus: ^8.0.2
   
   # NOTES: As noted on issue 20761, package_info on iOS requires the Xcode build folder to be
   # rebuilt after changes to the version string in pubspec.yaml. Clean the Xcode build folder

@@ -10,7 +10,7 @@ import 'package:after_layout/after_layout.dart';
 import 'package:dart_hydrologis_utils/dart_hydrologis_utils.dart';
 import 'package:dart_jts/dart_jts.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_map/plugin_api.dart';
+import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
@@ -397,7 +397,7 @@ class _LogProfileViewState extends State<LogProfileView> with AfterLayoutMixin {
       LatLng(env.getMinY(), env.getMinX()),
       LatLng(env.getMaxY(), env.getMaxX())
     ]);
-    mapController.fitBounds(bounds!);
+    mapController.fitCamera(CameraFit.bounds(bounds: bounds!));
 
     center = LatLng(env.centre()!.y, env.centre()!.x);
 
@@ -412,8 +412,8 @@ class _LogProfileViewState extends State<LogProfileView> with AfterLayoutMixin {
         LatLng(logDataPoints.last.lat, logDataPoints.last.lon));
     addStaticMarker(size, "1/2t", halfTimeLL);
     addStaticMarker(size, "1/2l", halfLengthLL);
-    addStaticMarker(size, "min", minElevLL);
-    addStaticMarker(size, "max", maxElevLL);
+    addStaticMarker(size, "minEl", minElevLL);
+    addStaticMarker(size, "maxEl", maxElevLL);
     addStaticMarker(size, maxSpeed.toStringAsFixed(0) + "m/s", maxSpeedLL);
 
     setState(() {});
@@ -428,13 +428,11 @@ class _LogProfileViewState extends State<LogProfileView> with AfterLayoutMixin {
         SmashColors.mainTextColorNeutral,
         SmashColors.mainBackground.withAlpha(100));
     staticMarkers.add(Marker(
-        anchorPos: AnchorPos.exactly(Anchor(size / 2, size * 3 / 2)),
-        point: ll,
-        width: size * 3 / 2,
-        height: size + MARKER_ICON_TEXT_EXTRA_HEIGHT,
-        builder: (ctx) {
-          return mi;
-        }));
+      point: ll,
+      width: size * 3 / 2,
+      height: size + MARKER_ICON_TEXT_EXTRA_HEIGHT,
+      child: mi,
+    ));
   }
 
   void afterFirstLayout(BuildContext context) {}
@@ -449,11 +447,11 @@ class _LogProfileViewState extends State<LogProfileView> with AfterLayoutMixin {
           point: hoverPoint!,
           width: 15,
           height: 15,
-          builder: (BuildContext context) => Container(
-                decoration: BoxDecoration(
-                    color: SmashColors.mainDecorations,
-                    borderRadius: BorderRadius.circular(8)),
-              )));
+          child: Container(
+            decoration: BoxDecoration(
+                color: SmashColors.mainDecorations,
+                borderRadius: BorderRadius.circular(8)),
+          )));
 
     var height = ScreenUtilities.getHeight(context);
 
@@ -497,12 +495,10 @@ class _LogProfileViewState extends State<LogProfileView> with AfterLayoutMixin {
             widget.logItem.width!, minLineElev, maxLineElev);
 
         polylines = PolylineLayer(
-          polylineCulling: true,
           polylines: lines,
         );
       } else {
         polylines = PolylineLayer(
-          polylineCulling: true,
           polylines: [
             Polyline(
               points: points,
@@ -520,10 +516,13 @@ class _LogProfileViewState extends State<LogProfileView> with AfterLayoutMixin {
     if (center != null) {
       mapLayers = [
         TileLayer(
-          urlTemplate: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-          subdomains: ['a', 'b', 'c'],
-          // TODO overrideTilesWhenUrlChanges: overrideTilesOnUrlChange,
+          urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
           errorTileCallback: errorTileCallback,
+          additionalOptions: {
+            "attribution":
+                '&copy; <a href="https://www.openstreetmap.org/copyright">'
+                    'OpenStreetMap</a> contributors',
+          },
         ),
       ];
       if (polylines != null) {
@@ -567,7 +566,7 @@ class _LogProfileViewState extends State<LogProfileView> with AfterLayoutMixin {
           mapController: mapController,
           options: new MapOptions(
             // center: center,
-            zoom: 11.0,
+            initialZoom: 11.0,
             onMapReady: () {
               loadData(context);
             },

@@ -40,11 +40,14 @@ class LayersPageState extends State<LayersPage> {
     List<LayerSource?> _layersList =
         LayerManager().getLayerSources(onlyActive: false);
 
+    // revert order
+    _layersList = _layersList.reversed.toList();
+
     List<Widget> listItems = createLayersList(_layersList, context);
 
     return PopScope(
         canPop: true,
-        onPopInvoked: (didPop) {
+        onPopInvokedWithResult: (didPop, res) {
           if (didPop && _somethingChanged) {
             setLayersOnChange(_layersList);
           }
@@ -155,7 +158,7 @@ class LayersPageState extends State<LayersPage> {
                   onReorder: (oldIndex, newIndex) {
                     if (oldIndex != newIndex) {
                       setState(() {
-                        LayerManager().moveLayer(oldIndex, newIndex);
+                        LayerManager().moveLayer(oldIndex, newIndex, true);
                         _somethingChanged = true;
                       });
                     }
@@ -283,6 +286,7 @@ class LayersPageState extends State<LayersPage> {
 
   List<Widget> createLayersList(
       List<LayerSource?> _layersList, BuildContext context) {
+    // revert prder of _layersList
     final List fixedList = Iterable<int>.generate(_layersList.length).toList();
     return fixedList.where((idx) => _layersList[idx] != null).map((idx) {
       var layerSourceItem = _layersList[idx]!;
@@ -505,10 +509,11 @@ class LayersPageState extends State<LayersPage> {
   }
 
   void setLayersOnChange(List<LayerSource?> _layersList) {
-    List<String> layers = _layersList
-        .where((ls) => ls != null)
-        .map((ls) => ls!.toJson())
-        .toList();
+    List<String> layers =
+        _layersList.reversed // need to reverse it back again to how it is saved
+            .where((ls) => ls != null)
+            .map((ls) => ls!.toJson())
+            .toList();
     GpPreferences().setLayerInfoList(layers);
   }
 }
