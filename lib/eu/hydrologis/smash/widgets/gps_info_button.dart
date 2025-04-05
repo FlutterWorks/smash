@@ -20,8 +20,7 @@ import 'package:smashlibs/smashlibs.dart';
 ///
 class GpsInfoButton extends StatefulWidget {
   final double _iconSize;
-  final _key;
-  GpsInfoButton(this._key, this._iconSize);
+  GpsInfoButton(this._iconSize);
 
   @override
   State<StatefulWidget> createState() => _GpsInfoButtonState();
@@ -34,6 +33,48 @@ class _GpsInfoButtonState extends State<GpsInfoButton> {
   Widget build(BuildContext context) {
     return Consumer<GpsState>(builder: (context, gpsState, child) {
       var mapState = Provider.of<SmashMapState>(context, listen: false);
+
+      Color backgroundColor;
+      Color frontColor;
+      IconData iconData;
+      switch (gpsState.status) {
+        case GpsStatus.OFF:
+        case GpsStatus.NOGPS:
+          {
+            backgroundColor = SmashColors.gpsOff;
+            iconData = Icons.gps_off;
+            frontColor = SmashColors.mainDecorationsDarker;
+            break;
+          }
+        case GpsStatus.ON_WITH_FIX:
+          {
+            backgroundColor = SmashColors.gpsOnWithFix;
+            iconData = Icons.gps_fixed;
+            frontColor = SmashColors.mainDecorationsDarker;
+            break;
+          }
+        case GpsStatus.ON_NO_FIX:
+          {
+            iconData = Icons.gps_not_fixed;
+            backgroundColor = SmashColors.gpsOnNoFix;
+            frontColor = SmashColors.mainDecorationsDarker;
+            break;
+          }
+        case GpsStatus.LOGGING:
+          {
+            iconData = Icons.gps_fixed;
+            backgroundColor = SmashColors.mainSelection;
+            frontColor = SmashColors.mainBackground;
+            break;
+          }
+        case GpsStatus.NOPERMISSION:
+          {
+            iconData = Icons.gps_off;
+            backgroundColor = SmashColors.gpsNoPermission;
+            frontColor = SmashColors.mainDecorationsDarker;
+            break;
+          }
+      }
 
       Widget button = GestureDetector(
         onLongPress: () {
@@ -61,13 +102,16 @@ class _GpsInfoButtonState extends State<GpsInfoButton> {
             // fit: StackFit.loose,
             children: [
               Transform.scale(
-                scale: 1.4,
+                scale: 1.2,
                 child: FloatingActionButton(
-                  key: widget._key,
+                  shape: CircleBorder(),
                   elevation: 1,
-                  backgroundColor: SmashColors.mainDecorations,
-                  child: DashboardUtils.getGpsStatusIcon(
-                      gpsState.status, widget._iconSize),
+                  backgroundColor: backgroundColor,
+                  child: Icon(
+                    iconData,
+                    size: widget._iconSize,
+                    color: frontColor,
+                  ),
                   onPressed: () {
                     if (gpsState.hasFix() ||
                         gpsState.status == GpsStatus.ON_NO_FIX) {

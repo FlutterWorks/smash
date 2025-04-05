@@ -329,7 +329,7 @@ class DashboardUtils {
             ),
             ListTile(
               leading: new Icon(
-                Icons.map,
+                MdiIcons.mapPlus,
                 color: c,
                 size: iconSize,
               ),
@@ -345,6 +345,26 @@ class DashboardUtils {
                     context,
                     MaterialPageRoute(
                         builder: (context) => MapsDownloadWidget(mapsFolder)));
+              },
+            ),
+            ListTile(
+              leading: new Icon(
+                MdiIcons.elevationRise,
+                color: c,
+                size: iconSize,
+              ),
+              title: SmashUI.normalText(
+                "Andromaps link",
+                bold: true,
+                color: c,
+              ),
+              onTap: () async {
+                var urlString =
+                    "https://ftp.gwdg.de/pub/misc/openstreetmap/openandromaps/mapsV5/";
+                Uri uri = Uri.parse(urlString);
+                if (await canLaunchUrl(uri)) {
+                  await launchUrl(uri);
+                }
               },
             ),
             if (GpPreferences().getBooleanSync(
@@ -373,6 +393,48 @@ class DashboardUtils {
                               )));
                 },
               ),
+            CheckboxListTile(
+              controlAffinity: ListTileControlAffinity.leading,
+              value: GpPreferences().getBooleanSync(
+                  SmashPreferencesKeys.KEY_SCREEN_TOOLBAR_SHOW_EDITING, false),
+              onChanged: (selected) async {
+                await GpPreferences().setBoolean(
+                    SmashPreferencesKeys.KEY_SCREEN_TOOLBAR_SHOW_EDITING,
+                    selected!);
+
+                PreferencesState prefState =
+                    Provider.of<PreferencesState>(context, listen: false);
+                prefState.onChanged();
+
+                SettingsWidget.reloadMapSettings(context);
+              },
+              title: SmashUI.normalText(
+                "Toggle editing",
+                bold: true,
+                color: c,
+              ),
+            ),
+            CheckboxListTile(
+              controlAffinity: ListTileControlAffinity.leading,
+              value: GpPreferences().getBooleanSync(
+                  SmashPreferencesKeys.KEY_SCREEN_SHOW_LOG_INFO_PANEL, false),
+              onChanged: (selected) async {
+                await GpPreferences().setBoolean(
+                    SmashPreferencesKeys.KEY_SCREEN_SHOW_LOG_INFO_PANEL,
+                    selected!);
+
+                PreferencesState prefState =
+                    Provider.of<PreferencesState>(context, listen: false);
+                prefState.onChanged();
+
+                SettingsWidget.reloadMapSettings(context);
+              },
+              title: SmashUI.normalText(
+                "Toggle log info panel",
+                bold: true,
+                color: c,
+              ),
+            ),
           ]),
     );
   }
@@ -607,7 +669,7 @@ class DashboardUtils {
       case GpsStatus.LOGGING:
         {
           iconData = SmashIcons.logIcon;
-          color = SmashColors.gpsLogging;
+          color = SmashColors.mainSelection;
           break;
         }
       case GpsStatus.OFF:
@@ -730,13 +792,22 @@ class FormBuilderFormHelper extends AFormhelper {
                           )));
 
               if (selectedPath != null &&
-                  selectedPath.toString().endsWith("_tags.json")) {
-                var tagsJson = HU.FileUtilities.readFile(selectedPath);
-                var tm = TagsManager();
-                await tm.readTags(tagsString: tagsJson);
-                section = tm.getTags().getSections()[0];
+                  selectedPath.toString().endsWith("tags.json")) {
+                try {
+                  var tagsJson = HU.FileUtilities.readFile(selectedPath);
+                  var tm = TagsManager();
+                  await tm.readTags(tagsString: tagsJson);
+                  section = tm.getTags().getSections()[0];
+                } on Exception catch (e) {
+                  SmashDialogs.showErrorDialog(context, e.toString());
+                } on Error catch (e) {
+                  SmashDialogs.showErrorDialog(context, e.toString());
+                }
 
                 if (postAction != null) postAction();
+              } else {
+                SmashDialogs.showWarningDialog(context,
+                    "Form files need to end with the tags.json postfix.");
               }
             }
           },
